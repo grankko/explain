@@ -40,8 +40,9 @@ namespace Explain.Cli.Commands
                 if (parsedArgs.IsVerbose)
                     ShowVerboseInformation(inputContent);
 
-                // TODO: Implement the actual AI service call
-                Console.WriteLine($"Processing content: {inputContent.Content}");
+                string aiResponse = await GenerateAiResponse(inputContent);
+
+                Console.WriteLine($"AI Response: {aiResponse}");
 
                 return 0;
             }
@@ -50,6 +51,18 @@ namespace Explain.Cli.Commands
                 Console.WriteLine($"Error: {ex.Message}");
                 return 1;
             }
+        }
+
+        private async Task<string> GenerateAiResponse(ExplainInputContent inputContent)
+        {
+            var messages = new List<ChatMessage>
+                {
+                    new SystemChatMessage(Prompts.ExplainPrompt),
+                    new UserChatMessage(inputContent.Content)
+                };
+
+            var aiResponse = await _openAiServiceAgent.GetChatCompletionAsync(messages);
+            return aiResponse;
         }
 
         private static void ShowVerboseInformation(ExplainInputContent inputContent)

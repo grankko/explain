@@ -41,9 +41,7 @@ namespace Explain.Cli.Commands.Explain
                 
                 // If there's also a command line question, treat it as a specific question about the piped content
                 if (!string.IsNullOrWhiteSpace(args.Question))
-                {
                     result.Content = $"Question: {args.Question}\n\nContent to analyze:\n{pipedInput}";
-                }
             }
             else if (!string.IsNullOrWhiteSpace(args.Question))
             {

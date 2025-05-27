@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Explain CLI",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/Explain.Cli/bin/Debug/net9.0/Explain.Cli.dll",
+            "args": ["How do I see hidden files in a directory?"],
+            "cwd": "${workspaceFolder}/src/Explain.Cli",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Launch Explain CLI (Verbose)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/Explain.Cli/bin/Debug/net9.0/Explain.Cli.dll",
+            "args": ["How do I see hidden files in a directory?", "--verbose"],
+            "cwd": "${workspaceFolder}/src/Explain.Cli",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        }
+    ]
+}
