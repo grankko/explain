@@ -15,10 +15,15 @@ namespace Explain.Cli.Configuration
         /// </summary>
         public string ApiKey { get; set; } = string.Empty;
 
-        /// <sum    mary>
-        /// OpenAI M    odel to use (e.g., "gpt-4", "gpt-3.5-turbo")
+        /// <summary>
+        /// OpenAI Model to use (e.g., "gpt-4", "gpt-3.5-turbo")
         /// </summary>  
         public string ModelName { get; set; } = "gpt-4";
+
+        /// <summary>
+        /// OpenAI Model to use for deep thinking(e.g., "o3", "o4-mini")
+        /// </summary>  
+        public string SmartModelName { get; set; } = "o4-mini";
 
         /// <summary>
         /// Optional: Organization ID

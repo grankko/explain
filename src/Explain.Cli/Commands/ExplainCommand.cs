@@ -10,10 +10,12 @@ namespace Explain.Cli.Commands
     public class ExplainCommand : ICommand
     {
         private readonly IOpenAIServiceAgent _openAiServiceAgent;
+        private readonly IConfigurationDisplayService _configurationDisplayService;
 
-        public ExplainCommand(IOpenAIServiceAgent openAiServiceAgent)
+        public ExplainCommand(IOpenAIServiceAgent openAiServiceAgent, IConfigurationDisplayService configurationDisplayService)
         {
             _openAiServiceAgent = openAiServiceAgent;
+            _configurationDisplayService = configurationDisplayService;
         }
 
         public async Task<int> ExecuteAsync(string[] args)
@@ -38,9 +40,9 @@ namespace Explain.Cli.Commands
 
                 // Show verbose information if requested
                 if (parsedArgs.IsVerbose)
-                    ShowVerboseInformation(inputContent);
+                    ShowVerboseInformation(inputContent, parsedArgs);
 
-                string aiResponse = await GenerateAiResponse(inputContent);
+                string aiResponse = await GenerateAiResponse(inputContent, parsedArgs);
 
                 Console.WriteLine($"AI Response: {aiResponse}");
 
@@ -53,7 +55,7 @@ namespace Explain.Cli.Commands
             }
         }
 
-        private async Task<string> GenerateAiResponse(ExplainInputContent inputContent)
+        private async Task<string> GenerateAiResponse(ExplainInputContent inputContent, ExplainArguments parsedArgs)
         {
             var messages = new List<ChatMessage>
                 {
@@ -61,19 +63,24 @@ namespace Explain.Cli.Commands
                     new UserChatMessage(inputContent.Content)
                 };
 
-            var aiResponse = await _openAiServiceAgent.GetChatCompletionAsync(messages);
+            var aiResponse = await _openAiServiceAgent.GetChatCompletionAsync(messages, parsedArgs.ThinkDeep);
             return aiResponse;
         }
 
-        private static void ShowVerboseInformation(ExplainInputContent inputContent)
+        private void ShowVerboseInformation(ExplainInputContent inputContent, ExplainArguments parsedArgs)
         {
-            Console.WriteLine($"Content to explain: {inputContent.Content}");
             Console.WriteLine("Verbose mode enabled.");
 
+            if (parsedArgs.ThinkDeep)
+                Console.WriteLine("Think deep mode enabled."); 
+
+
+            _configurationDisplayService.DisplayConfiguration();
+
+            Console.WriteLine($"Content to explain: {inputContent.Content}");
+            
             if (inputContent.HasPipedInput)
-            {
                 Console.WriteLine("Input received from pipe.");
-            }
         }
     }
 }

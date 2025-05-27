@@ -7,5 +7,6 @@ namespace Explain.Cli.Commands.Explain
     {
         public string Question { get; set; } = string.Empty;
         public bool IsVerbose { get; set; } = false;
+        public bool ThinkDeep { get; set; } = false;
     }
 }

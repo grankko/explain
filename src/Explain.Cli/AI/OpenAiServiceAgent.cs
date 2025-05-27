@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using OpenAI.Chat;
 using Explain.Cli.Configuration;
 using System.Text.Json;
+using System.ClientModel;
 
 namespace Explain.Cli.AI;
 
@@ -12,6 +13,7 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
 {
     private readonly OpenAiOptions _openAiOptions;
     private ChatClient _chatClient;
+    private ChatClient _smartChatClient;
     private bool _isVerbose = false;
 
     /// <summary>
@@ -35,21 +37,24 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
 
         // Create the OpenAI ChatClient with the model and API key
         _chatClient = new ChatClient(_openAiOptions.ModelName, _openAiOptions.ApiKey);
+        _smartChatClient = new ChatClient(_openAiOptions.SmartModelName, _openAiOptions.ApiKey);
     }
 
-    public async Task<string> GetChatCompletionAsync(List<ChatMessage> messages)
+    public async Task<string> GetChatCompletionAsync(List<ChatMessage> messages, bool thinkDeep)
     {
-        return await GetTypedChatCompletionAsync<string>(messages, null, null);
+        return await GetTypedChatCompletionAsync<string>(messages, thinkDeep, null, null);
     }
 
-    public async Task<T> GetTypedChatCompletionAsync<T>(List<ChatMessage> messages, string? schemaName, BinaryData? jsonSchema)
+    public async Task<T> GetTypedChatCompletionAsync<T>(List<ChatMessage> messages, bool thinkDeep, string? schemaName, BinaryData? jsonSchema)
     {
         try
         {
+            var temperature = thinkDeep ? 1f : 0.1f; // Adjust temperature based on model complexity
+
             // Call the OpenAI API with chat completion options
             var options = new ChatCompletionOptions
             {
-                Temperature = 0.1f, // Lower temperature for more deterministic responses
+                Temperature = temperature,
 #pragma warning disable OPENAI001
                 Seed = 1235431345345L,
 #pragma warning restore OPENAI001
@@ -73,12 +78,17 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
             }
 
             // Get the response from the API
-            var result = await _chatClient.CompleteChatAsync(messages, options);
+            ClientResult<ChatCompletion> result;
+            if (thinkDeep)
+                result = await _smartChatClient.CompleteChatAsync(messages, options);
+            else
+                result = await _chatClient.CompleteChatAsync(messages, options);
+
             var textResponse = result.Value.Content.FirstOrDefault()?.Text;
             if (string.IsNullOrWhiteSpace(textResponse))
                 throw new InvalidOperationException("Received empty response from OpenAI.");
 
-            
+
             // If structured output was attempted, deserialize to the specified type, if not, assume string response
             if (attemptedToUseStructuredOutput)
                 return JsonSerializer.Deserialize<T>(textResponse)

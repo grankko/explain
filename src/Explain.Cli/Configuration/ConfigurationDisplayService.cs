@@ -15,6 +15,7 @@ public class ConfigurationDisplayService : IConfigurationDisplayService
         Console.WriteLine("=== Configuration Test ===");
         Console.WriteLine($"API Key: {(!string.IsNullOrEmpty(_openAiOptions.ApiKey) ? "***CONFIGURED***" : "NOT SET")}");
         Console.WriteLine($"Model Name: {_openAiOptions.ModelName}");
+        Console.WriteLine($"Smart Model Name: {_openAiOptions.SmartModelName}");
         Console.WriteLine($"Organization: {_openAiOptions.Organization ?? "Not set"}");
         Console.WriteLine("===========================");
     }

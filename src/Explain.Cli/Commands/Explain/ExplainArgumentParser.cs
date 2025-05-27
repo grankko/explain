@@ -28,6 +28,13 @@ namespace Explain.Cli.Commands.Explain
                 argsList.Remove("--verbose");
             }
 
+            // Check for think deep flag
+            if (argsList.Contains("--think"))
+            {
+                result.ThinkDeep = true;
+                argsList.Remove("--think");
+            }
+
             // The remaining argument should be the question
             if (argsList.Count > 0)
             {

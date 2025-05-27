@@ -22,6 +22,28 @@
             "cwd": "${workspaceFolder}/src/Explain.Cli",
             "console": "integratedTerminal",
             "stopAtEntry": false
-        }
+        },
+        {
+            "name": "Launch Explain CLI think-deep",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/Explain.Cli/bin/Debug/net9.0/Explain.Cli.dll",
+            "args": ["How do I see hidden files in a directory?", "--think"],
+            "cwd": "${workspaceFolder}/src/Explain.Cli",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Launch Explain CLI think-deep (Verbose)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/Explain.Cli/bin/Debug/net9.0/Explain.Cli.dll",
+            "args": ["How do I see hidden files in a directory?", "--think", "--verbose"],
+            "cwd": "${workspaceFolder}/src/Explain.Cli",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        }                
     ]
 }
