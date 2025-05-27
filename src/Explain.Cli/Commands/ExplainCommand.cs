@@ -44,7 +44,10 @@ namespace Explain.Cli.Commands
 
                 string aiResponse = await GenerateAiResponse(inputContent, parsedArgs);
 
-                Console.WriteLine($"AI Response: {aiResponse}");
+                // Output the AI response in purple color
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.WriteLine(aiResponse);
+                Console.ResetColor();
 
                 return 0;
             }
