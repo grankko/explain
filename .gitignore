@@ -1,1 +1,16 @@
 src/Explain.Cli/appsettings.json
+
+# Publish directory - exclude everything except markdown files
+publish/
+!publish/*.md
+!publish/**/*.md
+
+# Specifically ignore sensitive config files anywhere
+**/appsettings.json
+**/appsettings.*.json
+!**/appsettings.example.json
+
+# Additional safety for API keys and secrets
+**/*apikey*
+**/*secret*
+**/*.key
