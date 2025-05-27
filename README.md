@@ -70,6 +70,9 @@ tail -n 100 /var/log/syslog | explain "Summarize any issues"
 
 # Explain code
 cat main.py | explain "What does this Python code do?"
+
+# Handle error messages (stderr)
+dmesg 2>&1 | explain "Why did this fail?"
 ```
 
 ### Building
