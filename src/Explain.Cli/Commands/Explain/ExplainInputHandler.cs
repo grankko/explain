@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.IO;
+
 namespace Explain.Cli.Commands.Explain
 {
 
@@ -19,30 +22,66 @@ namespace Explain.Cli.Commands.Explain
         public static async Task<ExplainInputContent> ProcessInputAsync(ExplainArguments args)
         {
             var result = new ExplainInputContent();
-            
+
             // Check if input is being piped
             string? pipedInput = null;
+            string? pipedError = null;
             if (Console.IsInputRedirected)
             {
-                pipedInput = await Console.In.ReadToEndAsync();
-                pipedInput = pipedInput?.Trim();
-                result.HasPipedInput = !string.IsNullOrWhiteSpace(pipedInput);
+                var stdinTask = Console.In.ReadToEndAsync();
+                Task<string>? errTask = null;
+                if (Console.IsErrorRedirected)
+                {
+                    using var errReader = new StreamReader(Console.OpenStandardError());
+                    errTask = errReader.ReadToEndAsync();
+                }
+
+                pipedInput = (await stdinTask) ?? string.Empty;
+                if (errTask != null)
+                    pipedError = await errTask;
+
+                pipedInput = pipedInput.Trim();
+                pipedError = pipedError?.Trim();
+                result.HasPipedInput = !string.IsNullOrWhiteSpace(pipedInput) || !string.IsNullOrWhiteSpace(pipedError);
             }
 
             // Determine the content to process
             if (!string.IsNullOrWhiteSpace(pipedInput))
             {
                 // If we have piped input, use it as the content to explain
-                result.Content = pipedInput;
-                
+                var combined = pipedInput;
+                if (!string.IsNullOrWhiteSpace(pipedError))
+                    combined += "\n(stderr):\n" + pipedError;
+                result.Content = combined;
+
                 // If there's also a command line question, treat it as a specific question about the piped content
                 if (!string.IsNullOrWhiteSpace(args.Question))
-                    result.Content = $"Question: {args.Question}\n\nContent to analyze:\n{pipedInput}";
+                    result.Content = $"Question: {args.Question}\n\nContent to analyze:\n{combined}";
             }
             else if (!string.IsNullOrWhiteSpace(args.Question))
             {
                 // No piped input, use the command line question
                 result.Content = args.Question;
+            }
+
+            // If no piped input and a command is specified, execute it
+            if (string.IsNullOrWhiteSpace(pipedInput) && !string.IsNullOrWhiteSpace(args.Command))
+            {
+                var output = await ExecuteCommandAsync(args.Command, args.CommandArguments);
+                if (string.IsNullOrWhiteSpace(output))
+                {
+                    // Fallback: treat the command as part of the question if there was no output
+                    if (string.IsNullOrWhiteSpace(result.Content))
+                        result.Content = args.Command;
+                }
+                else
+                {
+                    var combined = output;
+                    if (!string.IsNullOrWhiteSpace(result.Content))
+                        combined = $"Question: {result.Content}\n\nContent to analyze:\n{output}"; // result.Content currently holds question
+                    result.Content = combined;
+                    result.HasPipedInput = true;
+                }
             }
 
             // Validate input length if we have content
@@ -52,6 +91,35 @@ namespace Explain.Cli.Commands.Explain
             }
 
             return result;
+        }
+
+        private static async Task<string> ExecuteCommandAsync(string command, IEnumerable<string> arguments)
+        {
+            var psi = new ProcessStartInfo(command)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+
+            foreach (var arg in arguments)
+                psi.ArgumentList.Add(arg);
+
+            using var process = Process.Start(psi);
+            if (process == null)
+                return string.Empty;
+
+            var stdoutTask = process.StandardOutput.ReadToEndAsync();
+            var stderrTask = process.StandardError.ReadToEndAsync();
+            await Task.WhenAll(stdoutTask, stderrTask);
+            await process.WaitForExitAsync();
+
+            var output = stdoutTask.Result.Trim();
+            var error = stderrTask.Result.Trim();
+            if (!string.IsNullOrWhiteSpace(error))
+                output += "\n(stderr):\n" + error;
+
+            return output;
         }
 
         /// <summary>
@@ -103,6 +171,7 @@ namespace Explain.Cli.Commands.Explain
             Console.ResetColor();
             Console.WriteLine("  explain \"your question here\" [--verbose] [--think-deep]");
             Console.WriteLine("  cat file.txt | explain [\"specific question about the content\"] [--verbose] [--think-deep]");
+            Console.WriteLine("  explain ls -la [\"question about output\"]");
             Console.WriteLine();
 
             Console.ForegroundColor = ConsoleColor.Green;
