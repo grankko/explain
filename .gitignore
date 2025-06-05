@@ -14,3 +14,12 @@ publish/
 **/*apikey*
 **/*secret*
 **/*.key
+# .NET build results and temporary files
+**/[Bb]in/
+**/[Oo]bj/
+**/[Oo]ut/
+
+# Visual Studio and user-specific files
+.vs/
+*.user
+*.suo
