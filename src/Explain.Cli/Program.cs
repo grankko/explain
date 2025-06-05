@@ -32,10 +32,23 @@ class Program
     static ServiceProvider CreateServiceProvider(string[] args)
     {
         // Build configuration
+        var envOverrides = new Dictionary<string, string?>
+        {
+            ["OpenAi:ApiKey"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_KEY"),
+            ["OpenAi:ModelName"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_MODEL_NAME"),
+            ["OpenAi:SmartModelName"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_SMART_MODEL_NAME")
+        };
+
+        // Remove null values so they don't override existing configuration
+        var sanitizedEnvOverrides = envOverrides
+            .Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
+            .ToDictionary(kv => kv.Key, kv => kv.Value!);
+
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Path.GetDirectoryName(typeof(Program).Assembly.Location) ?? Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
             .AddEnvironmentVariables()
+            .AddInMemoryCollection(sanitizedEnvOverrides)
             .AddCommandLine(args)
             .Build();
 
