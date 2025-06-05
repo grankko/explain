@@ -90,14 +90,27 @@ namespace Explain.Cli.Commands.Explain
         /// </summary>
         public static void ShowUsage()
         {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Explain CLI");
+            Console.WriteLine(new string('-', 20));
+            Console.ResetColor();
+
             Console.WriteLine("Please provide a question to explain or pipe content to analyze.");
-            Console.WriteLine("Usage: ");
+            Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("Usage:");
+            Console.ResetColor();
             Console.WriteLine("  explain \"your question here\" [--verbose] [--think-deep]");
             Console.WriteLine("  cat file.txt | explain [\"specific question about the content\"] [--verbose] [--think-deep]");
             Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Input limits:");
+            Console.ResetColor();
             Console.WriteLine($"  Regular mode: ~{MAX_INPUT_TOKENS_REGULAR:N0} tokens (~{MAX_INPUT_TOKENS_REGULAR * CHARS_PER_TOKEN / 1024:N0}KB)");
             Console.WriteLine($"  Smart mode:   ~{MAX_INPUT_TOKENS_SMART:N0} tokens (~{MAX_INPUT_TOKENS_SMART * CHARS_PER_TOKEN / 1024:N0}KB)");
+            Console.ResetColor();
         }
     }
 }
