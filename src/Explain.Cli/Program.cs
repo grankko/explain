@@ -42,7 +42,7 @@ class Program
         // Remove null values so they don't override existing configuration
         var sanitizedEnvOverrides = envOverrides
             .Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
-            .ToDictionary(kv => kv.Key, kv => kv.Value!);
+            .Select(kv => new KeyValuePair<string, string?>(kv.Key, kv.Value!));
 
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Path.GetDirectoryName(typeof(Program).Assembly.Location) ?? Directory.GetCurrentDirectory())
