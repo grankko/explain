@@ -7,8 +7,8 @@ namespace Explain.Cli.Tests.UnitTests.Storage;
 [TestClass]
 public class HistoryServiceTests
 {
-    private HistoryService _historyService;
-    private string _testDatabasePath;
+    private HistoryService _historyService = null!;
+    private string _testDatabasePath = null!;
 
     [TestInitialize]
     public void Setup()
