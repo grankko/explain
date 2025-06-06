@@ -146,7 +146,7 @@ namespace Explain.Cli.Commands
                 };
 
             // Start the thinking animation
-            var animationTask = ShowThinkingAnimationAsync(_animationCts.Token);
+            var animationTask = ShowThinkingAnimationAsync(_animationCts.Token, parsedArgs.ThinkDeep);
 
             try
             {
@@ -169,8 +169,10 @@ namespace Explain.Cli.Commands
             }
         }
 
-        private async Task ShowThinkingAnimationAsync(CancellationToken cancellationToken)
+        private async Task ShowThinkingAnimationAsync(CancellationToken cancellationToken, bool thinkDeep)
         {
+            var thinkingLabel = thinkDeep ? " thinking deeply.." : " thinking..";
+
             string[] spinner = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" };
             int spinnerIndex = 0;
 
@@ -180,7 +182,7 @@ namespace Explain.Cli.Commands
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    Console.Write($"\r {spinner[spinnerIndex]} thinking...");
+                    Console.Write($"\r {spinner[spinnerIndex]} {thinkingLabel}");
                     spinnerIndex = (spinnerIndex + 1) % spinner.Length;
                     await Task.Delay(100, cancellationToken);
                 }
