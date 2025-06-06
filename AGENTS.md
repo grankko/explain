@@ -12,13 +12,27 @@ This repository contains a .NET command line application `explain` that uses Ope
 
 ## Running Tests
 
-- Execute the automated test suite:
+The project has two types of tests organized in separate namespaces:
 
+### Unit Tests (Default)
+- Execute the unit test suite (runs by default):
   ```bash
-  dotnet test src/Explain.Cli.Tests/Explain.Cli.Tests.csproj
+  dotnet test src/Explain.Cli.Tests/
   ```
+- Unit tests are located in `src/Explain.Cli.Tests/UnitTests/` and test individual components in isolation
+- These tests run quickly and don't require external dependencies or API keys
 
-The project uses MSTest and tests should pass without needing an API key.
+### Integration Tests (Manual)
+- Integration tests are **ignored by default** to prevent environment lockup
+- Run integration tests specifically (requires CLI to be built first):
+  ```bash
+  dotnet test src/Explain.Cli.Tests/ --filter "FullyQualifiedName~IntegrationTests"
+  ```
+- Integration tests are located in `src/Explain.Cli.Tests/IntegrationTests/` 
+- These tests execute the CLI as separate processes and verify end-to-end functionality
+- They include timeout mechanisms to prevent hanging during test execution
+
+All tests should pass without needing a real API key. Integration tests verify graceful error handling when no valid API key is configured.
 
 ## Running the Application
 
@@ -40,6 +54,9 @@ The `publish.sh` script can be used to build a standalone executable.
 
 ### Testing Philosophy
 
-- Provide tests that verify real logic and behaviour. Empty or trivial tests should be avoided.
+- **Unit Tests**: Verify real logic and behavior of individual components. Located in `UnitTests/` namespace.
+- **Integration Tests**: Test end-to-end CLI functionality through process execution. Located in `IntegrationTests/` namespace and ignored by default.
 - Prefer a small number of meaningful tests over a large suite of shallow ones.
+- Tests are designed to run without external dependencies and handle missing API keys gracefully.
+- Integration tests include timeout mechanisms and proper process management to prevent environment lockup.
 

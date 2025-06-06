@@ -1,6 +1,6 @@
 using Explain.Cli.Commands.Explain;
 
-namespace Explain.Cli.Tests.Commands.Explain;
+namespace Explain.Cli.Tests.UnitTests.Commands.Explain;
 
 [TestClass]
 public class ExplainArgumentParserTests

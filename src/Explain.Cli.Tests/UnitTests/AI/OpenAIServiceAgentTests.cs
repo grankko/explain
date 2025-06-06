@@ -2,7 +2,7 @@ using Microsoft.Extensions.Options;
 using Explain.Cli.AI;
 using Explain.Cli.Configuration;
 
-namespace Explain.Cli.Tests.AI;
+namespace Explain.Cli.Tests.UnitTests.AI;
 
 [TestClass]
 public class OpenAIServiceAgentTests

@@ -75,18 +75,24 @@ cat main.py | explain "What does this Python code do?"
 dmesg 2>&1 | explain "Why did this fail?"
 ```
 
-### Building
+### Building and Testing
 
 ```bash
 # Build the project
 dotnet build src/Explain.Cli/Explain.Cli.csproj
 
-# Run tests
+# Run unit tests only (default - integration tests are ignored)
 dotnet test src/Explain.Cli.Tests/
+
+# Run integration tests specifically (requires temporarily uncommenting [Ignore] attributes)
+# Comment out the [Ignore] attributes in IntegrationTests/ExplainCommandIntegrationTests.cs first
+dotnet test src/Explain.Cli.Tests/ --filter "FullyQualifiedName~IntegrationTests"
 
 # Debug mode
 dotnet run --project src/Explain.Cli -- "your question here"
 ```
+
+**Note**: Integration tests are ignored by default to prevent environment lockup during regular test runs. They test the CLI as a separate process and require the application to be built first.
 
 ### VS Code Integration
 

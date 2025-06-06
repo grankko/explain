@@ -7,9 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Explain.Cli;
 
-class Program
+public class Program
 {
-    static async Task<int> Main(string[] args)
+    public static async Task<int> Main(string[] args)
     {
         try
         {
@@ -29,7 +29,7 @@ class Program
         }
     }
     
-    static ServiceProvider CreateServiceProvider(string[] args)
+    public static ServiceProvider CreateServiceProvider(string[] args)
     {
         // Build configuration
         var envOverrides = new Dictionary<string, string?>
@@ -43,9 +43,9 @@ class Program
         var sanitizedEnvOverrides = envOverrides
             .Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
             .Select(kv => new KeyValuePair<string, string?>(kv.Key, kv.Value!));
-
+            
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Path.GetDirectoryName(typeof(Program).Assembly.Location) ?? Directory.GetCurrentDirectory())
+            .SetBasePath(System.AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
             .AddEnvironmentVariables()
             .AddInMemoryCollection(sanitizedEnvOverrides)
