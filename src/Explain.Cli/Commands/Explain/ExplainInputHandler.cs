@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Explain.Cli.Commands.Explain
 {
 
@@ -16,7 +18,7 @@ namespace Explain.Cli.Commands.Explain
         /// </summary>
         /// <param name="args">Parsed explain command arguments</param>
         /// <returns>Processed input content</returns>
-        public static async Task<ExplainInputContent> ProcessInputAsync(ExplainArguments args)
+        public static async Task<ExplainInputContent> ProcessInputAsync(ExplainArguments args, string history)
         {
             var result = new ExplainInputContent();
             
@@ -37,28 +39,35 @@ namespace Explain.Cli.Commands.Explain
                     // If reading fails, treat as no piped input
                 }
             }
+            
+            var contentBuilder = new StringBuilder();
+
+            // Add history if provided
+            if (!string.IsNullOrWhiteSpace(history))
+                contentBuilder.AppendLine(history);
 
             // Determine the content to process
             if (!string.IsNullOrWhiteSpace(pipedInput))
             {
                 // If we have piped input, use it as the content to explain
-                result.Content = pipedInput;
-                
+                contentBuilder.AppendLine($"Piped content:");
+                contentBuilder.AppendLine(pipedInput);
+                contentBuilder.AppendLine(new string('-', 10));
+
                 // If there's also a command line question, treat it as a specific question about the piped content
                 if (!string.IsNullOrWhiteSpace(args.Question))
-                    result.Content = $"Question: {args.Question}\n\nContent to analyze:\n{pipedInput}";
+                    contentBuilder.AppendLine($"Question: {args.Question}");
+
             }
             else if (!string.IsNullOrWhiteSpace(args.Question))
-            {
                 // No piped input, use the command line question
-                result.Content = args.Question;
-            }
+                contentBuilder.AppendLine($"Question: {args.Question}");
+
+            result.Content = contentBuilder.ToString();
 
             // Validate input length if we have content
             if (!result.IsEmpty)
-            {
                 ValidateInputLength(result.Content, args.ThinkDeep, args.IsVerbose);
-            }
 
             return result;
         }

@@ -1,5 +1,7 @@
 using Explain.Cli.AI;
 using Explain.Cli.Commands.Explain;
+using Explain.Cli.Configuration;
+using Explain.Cli.Storage;
 using OpenAI.Chat;
 using System.Threading;
 
@@ -11,12 +13,14 @@ namespace Explain.Cli.Commands
     public class ExplainCommand : ICommand
     {
         private readonly IOpenAIServiceAgent _openAiServiceAgent;
+        private readonly IHistoryService _historyService;
         private readonly IConfigurationDisplayService _configurationDisplayService;
         private readonly CancellationTokenSource _animationCts = new();
 
-        public ExplainCommand(IOpenAIServiceAgent openAiServiceAgent, IConfigurationDisplayService configurationDisplayService)
+        public ExplainCommand(IOpenAIServiceAgent openAiServiceAgent, IHistoryService historyService, IConfigurationDisplayService configurationDisplayService)
         {
             _openAiServiceAgent = openAiServiceAgent;
+            _historyService = historyService;
             _configurationDisplayService = configurationDisplayService;
         }
 
@@ -27,8 +31,13 @@ namespace Explain.Cli.Commands
                 // Parse command line arguments
                 var parsedArgs = ExplainArgumentParser.ParseArguments(args);
 
+                // Fetch history
+                var history = _historyService.GetHistoryAsText(5);
+
+                // todo: fix that history is added to history
+
                 // Process input from both command line and piped sources
-                var inputContent = await ExplainInputHandler.ProcessInputAsync(parsedArgs);
+                var inputContent = await ExplainInputHandler.ProcessInputAsync(parsedArgs, history);
 
                 // Validate that we have content to process
                 if (inputContent.IsEmpty)
@@ -44,12 +53,14 @@ namespace Explain.Cli.Commands
                 if (parsedArgs.IsVerbose)
                     ShowVerboseInformation(inputContent, parsedArgs);
 
-                string aiResponse = await GenerateAiResponse(inputContent, parsedArgs);
+                var aiResponse = await GenerateAiResponse(inputContent, parsedArgs);
 
                 // Output the AI response in purple color
                 Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.WriteLine(aiResponse);
+                Console.WriteLine(aiResponse.Response);
                 Console.ResetColor();
+
+                _historyService.AddToHistory(inputContent.Content, aiResponse.Response, aiResponse.ModelName, aiResponse.PromptTokens, aiResponse.CompletionTokens, aiResponse.TotalTokens);
 
                 return 0;
             }
@@ -60,11 +71,12 @@ namespace Explain.Cli.Commands
             }
         }
 
-        private async Task<string> GenerateAiResponse(ExplainInputContent inputContent, ExplainArguments parsedArgs)
+        private async Task<AiResponse<string>> GenerateAiResponse(ExplainInputContent inputContent, ExplainArguments parsedArgs)
         {
             var messages = new List<ChatMessage>
                 {
                     new SystemChatMessage(Prompts.ExplainPrompt),
+                    new SystemChatMessage($"The current time is: {DateTime.Now:yyyy-MM-dd HH:mm:ss}"),
                     new UserChatMessage(inputContent.Content)
                 };
 

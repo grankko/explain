@@ -1,6 +1,7 @@
 ﻿using Explain.Cli.AI;
 using Explain.Cli.Commands;
 using Explain.Cli.Configuration;
+using Explain.Cli.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -61,9 +62,11 @@ public class Program
             builder.AddConsole();
             builder.SetMinimumLevel(LogLevel.Information);
         });
-        
+                
+        services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
         services.Configure<OpenAiOptions>(configuration.GetSection(OpenAiOptions.SectionName));
         services.AddScoped<IOpenAIServiceAgent, OpenAIServiceAgent>();
+        services.AddScoped<IHistoryService, HistoryService>();
         services.AddScoped<IConfigurationDisplayService, ConfigurationDisplayService>();
         services.AddScoped<ICommand, ExplainCommand>();
 

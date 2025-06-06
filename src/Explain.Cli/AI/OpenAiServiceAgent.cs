@@ -40,13 +40,15 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
         _smartChatClient = new ChatClient(_openAiOptions.SmartModelName, _openAiOptions.ApiKey);
     }
 
-    public async Task<string> GetChatCompletionAsync(List<ChatMessage> messages, bool thinkDeep)
+    public async Task<AiResponse<string>> GetChatCompletionAsync(List<ChatMessage> messages, bool thinkDeep)
     {
         return await GetTypedChatCompletionAsync<string>(messages, thinkDeep, null, null);
     }
 
-    public async Task<T> GetTypedChatCompletionAsync<T>(List<ChatMessage> messages, bool thinkDeep, string? schemaName, BinaryData? jsonSchema)
+    public async Task<AiResponse<T>> GetTypedChatCompletionAsync<T>(List<ChatMessage> messages, bool thinkDeep, string? schemaName, BinaryData? jsonSchema)
     {
+        AiResponse<T> aiResult;
+
         try
         {
             var temperature = thinkDeep ? 1f : 0.1f; // Adjust temperature based on model complexity
@@ -89,14 +91,26 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
                 throw new InvalidOperationException("Received empty response from OpenAI.");
 
 
+
             // If structured output was attempted, deserialize to the specified type, if not, assume string response
             if (attemptedToUseStructuredOutput)
-                return JsonSerializer.Deserialize<T>(textResponse)
+            {
+                var typedResponse = JsonSerializer.Deserialize<T>(textResponse)
                     ?? throw new InvalidOperationException("Failed to deserialize OpenAI response.");
+
+                aiResult = new AiResponse<T>(typedResponse);
+            }
             else if (typeof(T) == typeof(string))
-                return (T)(object)textResponse!;
+            {
+                aiResult = new AiResponse<T>((T)(object)textResponse!);
+            }
             else
                 throw new InvalidOperationException($"Cannot convert response to type {typeof(T).Name}.");
+
+            aiResult.ModelName = result.Value.Model;
+            aiResult.PromptTokens = result.Value.Usage.InputTokenCount;
+            aiResult.CompletionTokens = result.Value.Usage.OutputTokenCount;
+            aiResult.TotalTokens = result.Value.Usage.TotalTokenCount;
 
         }
         catch (Exception ex)
@@ -107,5 +121,21 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
 
             throw;
         }
+
+        return aiResult;
     }
+}
+
+public class AiResponse<T>
+{
+    public AiResponse(T response)
+    {
+        Response = response;
+    }
+
+    public T Response { get; set; }
+    public string ModelName { get; set; } = string.Empty;
+    public int PromptTokens { get; set; }
+    public int CompletionTokens { get; set; }
+    public int TotalTokens { get; set; }
 }
