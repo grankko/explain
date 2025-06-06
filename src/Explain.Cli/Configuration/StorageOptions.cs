@@ -7,7 +7,7 @@ namespace Explain.Cli.Configuration
     {
         public const string SectionName = "Storage";
 
-        public string ConnectionString { get; set; } = string.Empty;
+        public string ConnectionString { get; set; } = $"Data Source={ConfigurationPathProvider.GetDefaultDatabasePath()}";
 
     }
 }

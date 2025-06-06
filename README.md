@@ -26,8 +26,17 @@ A command-line tool that uses OpenAI's GPT models to explain anything you throw 
 
 2. **Configure your API key**:
    ```bash
+   # Option 1: Create user configuration (recommended)
+   mkdir -p ~/.config/explain
+   cp src/Explain.Cli/appsettings.example.json ~/.config/explain/appsettings.json
+   # Edit ~/.config/explain/appsettings.json with your OpenAI API key
+   
+   # Option 2: Use application directory configuration
    cp src/Explain.Cli/appsettings.example.json src/Explain.Cli/appsettings.json
-   # Edit appsettings.json with your OpenAI API key
+   # Edit src/Explain.Cli/appsettings.json with your OpenAI API key
+   
+   # Option 3: Use environment variables (works with any setup)
+   export EXPLAIN_OPENAI_KEY="your-api-key-here"
    ```
 
 3. **Build and publish**:
@@ -41,6 +50,28 @@ A command-line tool that uses OpenAI's GPT models to explain anything you throw 
    # The publish script creates a self-contained executable at publish/explain
    # You can copy it to your PATH or use the provided wrapper script
    ```
+
+## Configuration and Data Storage
+
+The `explain` CLI uses a user configuration directory for storing settings and data:
+
+- **Configuration Directory**: `~/.config/explain/`
+- **Database Location**: `~/.config/explain/explain_history.sqlite`
+- **User Config File**: `~/.config/explain/appsettings.json` (optional)
+
+### Configuration Priority
+
+The application loads configuration in the following order (higher priority overrides lower):
+
+1. **Command line arguments** (highest priority)
+2. **Environment variables**: 
+   - `EXPLAIN_OPENAI_KEY`
+   - `EXPLAIN_OPENAI_MODEL_NAME` 
+   - `EXPLAIN_OPENAI_SMART_MODEL_NAME`
+3. **User configuration file**: `~/.config/explain/appsettings.json`
+4. **Application configuration file**: `src/Explain.Cli/appsettings.json` (lowest priority)
+
+The configuration directory and database are automatically created when the application first runs.
 
 ## Usage
 
