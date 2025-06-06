@@ -2,6 +2,14 @@
 
 A command-line tool that uses OpenAI's GPT models to explain anything you throw at it. Whether you have a quick question or need detailed analysis of complex content, `explain` provides intelligent responses right in your terminal. AI wrote this readme.
 
+## Demo
+
+### Basic input with arguments
+![Demo](media/basic.gif)
+
+### Explain piped input
+![Demo](media/pipe.gif)
+
 ## Features
 
 - **Multiple Input Methods**: Support for direct questions and piped content
