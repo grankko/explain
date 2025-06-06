@@ -106,6 +106,31 @@ cat main.py | explain "What does this Python code do?"
 dmesg 2>&1 | explain "Why did this fail?"
 ```
 
+### History Management
+View your previous questions and explanations:
+```bash
+# Show last 5 questions (default)
+explain --show-history
+
+# Show last 10 questions
+explain --show-history 10
+
+# Show all history
+explain --show-history 0
+```
+
+**Note**: The `--show-history` flag cannot be combined with other input methods (questions, piped content, or other flags).
+
+### Command Line Options
+
+- `--verbose`: Display detailed configuration and processing information
+- `--think`: Use advanced reasoning mode with o1 models for complex analysis
+- `--show-history [number]`: Display previous questions and explanations
+  - Without number: Shows last 5 entries (default)
+  - With number: Shows specified number of entries
+  - With 0: Shows all history entries
+  - Cannot be combined with other input or flags
+
 ### Building and Testing
 
 ```bash

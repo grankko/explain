@@ -31,7 +31,32 @@ namespace Explain.Cli.Commands
                 // Parse command line arguments
                 var parsedArgs = ExplainArgumentParser.ParseArguments(args);
 
-                // Fetch history
+                // Handle show history request
+                if (parsedArgs.ShowHistory)
+                {
+                    // Validate that no other input is provided when showing history
+                    if (!string.IsNullOrWhiteSpace(parsedArgs.Question) || parsedArgs.ThinkDeep || Console.IsInputRedirected)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Error: --show-history cannot be combined with other input or flags.");
+                        Console.ResetColor();
+                        return 1;
+                    }
+
+                    // Display history
+                    var historyText = _historyService.GetHistoryAsText(parsedArgs.HistoryLimit);
+                    if (string.IsNullOrWhiteSpace(historyText))
+                    {
+                        Console.WriteLine("No history found.");
+                    }
+                    else
+                    {
+                        Console.WriteLine(historyText);
+                    }
+                    return 0;
+                }
+
+                // Fetch history for normal operation
                 var history = _historyService.GetHistoryAsText(5);
 
                 // Process input from both command line and piped sources
