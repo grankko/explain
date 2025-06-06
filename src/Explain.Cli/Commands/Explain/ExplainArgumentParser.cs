@@ -50,6 +50,13 @@ namespace Explain.Cli.Commands.Explain
                 }
             }
 
+            // Check for clear history flag
+            if (argsList.Contains("--clear-history"))
+            {
+                result.ClearHistory = true;
+                argsList.Remove("--clear-history");
+            }
+
             // The remaining argument should be the question
             if (argsList.Count > 0)
             {

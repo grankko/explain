@@ -118,6 +118,7 @@ namespace Explain.Cli.Commands.Explain
             Console.WriteLine("  explain \"your question here\" [--verbose] [--think]");
             Console.WriteLine("  cat file.txt | explain [\"specific question about the content\"] [--verbose] [--think]");
             Console.WriteLine("  explain --show-history [number]");
+            Console.WriteLine("  explain --clear-history");
             Console.WriteLine();
 
             Console.ForegroundColor = ConsoleColor.Green;
@@ -126,6 +127,7 @@ namespace Explain.Cli.Commands.Explain
             Console.WriteLine("  --verbose          Show detailed configuration and processing information");
             Console.WriteLine("  --think            Use advanced reasoning with smart models");
             Console.WriteLine("  --show-history [n] Show last n history entries (default: 5, cannot be combined with other input)");
+            Console.WriteLine("  --clear-history    Clear all history (requires confirmation, cannot be combined with other input)");
             Console.WriteLine();
 
             Console.ForegroundColor = ConsoleColor.Green;

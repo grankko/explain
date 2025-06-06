@@ -119,7 +119,13 @@ explain --show-history 10
 explain --show-history 0
 ```
 
-**Note**: The `--show-history` flag cannot be combined with other input methods (questions, piped content, or other flags).
+Clear all history entries:
+```bash
+# Clear all history (requires typing 'yes' to confirm)
+explain --clear-history
+```
+
+**Note**: The `--show-history` and `--clear-history` flags cannot be combined with other input methods (questions, piped content, or other flags).
 
 ### Command Line Options
 
@@ -129,6 +135,9 @@ explain --show-history 0
   - Without number: Shows last 5 entries (default)
   - With number: Shows specified number of entries
   - With 0: Shows all history entries
+  - Cannot be combined with other input or flags
+- `--clear-history`: Clear all history entries
+  - Requires typing 'yes' to confirm deletion
   - Cannot be combined with other input or flags
 
 ### Building and Testing

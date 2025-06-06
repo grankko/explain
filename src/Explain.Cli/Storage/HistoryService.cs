@@ -120,6 +120,14 @@ namespace Explain.Cli.Storage
             return history;
         }
 
+        public void ClearHistory()
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
 
+            using var command = connection.CreateCommand();
+            command.CommandText = "DELETE FROM History;";
+            command.ExecuteNonQuery();
+        }
     }
 }

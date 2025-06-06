@@ -64,6 +64,7 @@ echo "some text" | dotnet run --project src/Explain.Cli -- "Explain this"
 # Use flags for additional functionality
 dotnet run --project src/Explain.Cli -- "complex question" --think --verbose
 dotnet run --project src/Explain.Cli -- --show-history 10
+dotnet run --project src/Explain.Cli -- --clear-history
 ```
 
 The `publish.sh` script can be used to build a standalone executable.

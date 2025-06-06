@@ -237,4 +237,95 @@ public class ExplainArgumentParserTests
         Assert.IsFalse(result.ThinkDeep);
         Assert.AreEqual(string.Empty, result.Question);
     }
+
+    [TestMethod]
+    public void ParseArguments_WithClearHistory_SetsClearHistoryTrue()
+    {
+        // Arrange
+        var args = new[] { "--clear-history" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsTrue(result.ClearHistory);
+        Assert.AreEqual(string.Empty, result.Question);
+        Assert.IsFalse(result.ShowHistory);
+    }
+
+    [TestMethod]
+    public void ParseArguments_WithClearHistoryAndOtherFlags_SetsAllFlags()
+    {
+        // Arrange
+        var args = new[] { "--clear-history", "--verbose", "--think" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsTrue(result.ClearHistory);
+        Assert.IsTrue(result.IsVerbose);
+        Assert.IsTrue(result.ThinkDeep);
+        Assert.AreEqual(string.Empty, result.Question);
+    }
+
+    [TestMethod]
+    public void ParseArguments_WithClearHistoryInMiddle_ParsesCorrectly()
+    {
+        // Arrange
+        var args = new[] { "--verbose", "--clear-history", "--think", "some", "question" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsTrue(result.ClearHistory);
+        Assert.IsTrue(result.IsVerbose);
+        Assert.IsTrue(result.ThinkDeep);
+        Assert.AreEqual("some question", result.Question);
+    }
+
+    [TestMethod]
+    public void ParseArguments_WithClearHistoryAtEnd_ParsesCorrectly()
+    {
+        // Arrange
+        var args = new[] { "what", "is", "this", "--clear-history" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsTrue(result.ClearHistory);
+        Assert.AreEqual("what is this", result.Question);
+    }
+
+    [TestMethod]
+    public void ParseArguments_WithBothHistoryFlags_SetsBothFlags()
+    {
+        // Arrange
+        var args = new[] { "--show-history", "10", "--clear-history" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsTrue(result.ShowHistory);
+        Assert.AreEqual(10, result.HistoryLimit);
+        Assert.IsTrue(result.ClearHistory);
+        Assert.AreEqual(string.Empty, result.Question);
+    }
+
+    [TestMethod]
+    public void ParseArguments_DefaultClearHistory_IsFalse()
+    {
+        // Arrange
+        var args = new[] { "simple", "question" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsFalse(result.ClearHistory);
+        Assert.AreEqual("simple question", result.Question);
+    }
 }

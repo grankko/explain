@@ -35,7 +35,7 @@ namespace Explain.Cli.Commands
                 if (parsedArgs.ShowHistory)
                 {
                     // Validate that no other input is provided when showing history
-                    if (!string.IsNullOrWhiteSpace(parsedArgs.Question) || parsedArgs.ThinkDeep || Console.IsInputRedirected)
+                    if (!string.IsNullOrWhiteSpace(parsedArgs.Question) || parsedArgs.ThinkDeep || parsedArgs.ClearHistory || Console.IsInputRedirected)
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("Error: --show-history cannot be combined with other input or flags.");
@@ -52,6 +52,37 @@ namespace Explain.Cli.Commands
                     else
                     {
                         Console.WriteLine(historyText);
+                    }
+                    return 0;
+                }
+
+                // Handle clear history request
+                if (parsedArgs.ClearHistory)
+                {
+                    // Validate that no other input is provided when clearing history
+                    if (!string.IsNullOrWhiteSpace(parsedArgs.Question) || parsedArgs.ThinkDeep || parsedArgs.ShowHistory)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Error: --clear-history cannot be combined with other input or flags.");
+                        Console.ResetColor();
+                        return 1;
+                    }
+
+                    // Prompt for confirmation
+                    Console.WriteLine("This will permanently delete all history entries.");
+                    Console.Write("Are you sure you want to continue? Type 'yes' to confirm: ");
+                    var confirmation = Console.ReadLine();
+                    
+                    if (string.Equals(confirmation?.Trim(), "yes", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _historyService.ClearHistory();
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("History cleared successfully.");
+                        Console.ResetColor();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Operation cancelled.");
                     }
                     return 0;
                 }

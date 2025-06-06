@@ -10,5 +10,6 @@ namespace Explain.Cli.Commands.Explain
         public bool ThinkDeep { get; set; } = false;
         public bool ShowHistory { get; set; } = false;
         public int HistoryLimit { get; set; } = 5;
+        public bool ClearHistory { get; set; } = false;
     }
 }
