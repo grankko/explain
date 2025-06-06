@@ -95,4 +95,30 @@ public class HistoryServiceTests
         Assert.IsFalse(history.Contains("Original Question"));
         Assert.IsFalse(history.Contains("Original Answer"));
     }
+
+    [TestMethod]
+    public void HistoryFormat_DoesNotContainRecursiveHistory()
+    {
+        // Arrange - Add some entries to simulate the scenario
+        _historyService.AddToHistory("First question", "First answer", "gpt-4", 10, 20, 30);
+        _historyService.AddToHistory("Second question", "Second answer", "gpt-4", 15, 25, 40);
+        
+        // Act - Get the history text
+        var historyText = _historyService.GetHistoryAsText(5);
+        
+        // Assert - Verify the history format is correct and doesn't contain recursive data
+        Assert.IsFalse(string.IsNullOrWhiteSpace(historyText));
+        Assert.IsTrue(historyText.Contains("=== History ==="));
+        Assert.IsTrue(historyText.Contains("First question"));
+        Assert.IsTrue(historyText.Contains("Second question"));
+        Assert.IsTrue(historyText.Contains("First answer"));
+        Assert.IsTrue(historyText.Contains("Second answer"));
+        
+        // Critical: The input should NOT contain history markup or recursive history
+        Assert.IsFalse(historyText.Contains("Input: === History ==="));
+        
+        // Count occurrences of "=== History ===" - should only appear once at the top
+        var historyHeaderCount = historyText.Split("=== History ===").Length - 1;
+        Assert.AreEqual(1, historyHeaderCount, "History header should appear only once, not recursively");
+    }
 }

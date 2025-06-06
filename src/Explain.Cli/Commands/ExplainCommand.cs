@@ -107,7 +107,13 @@ namespace Explain.Cli.Commands
                 if (parsedArgs.IsVerbose)
                     ShowVerboseInformation(inputContent, parsedArgs);
 
-                var inputContentWithHistory = inputContent;
+                // Create a copy of input content for adding history (don't modify the original)
+                var inputContentWithHistory = new ExplainInputContent
+                {
+                    Content = inputContent.Content,
+                    HasPipedInput = inputContent.HasPipedInput
+                };
+                
                 if (!string.IsNullOrWhiteSpace(history))
                     inputContentWithHistory.Content = $"{history}\n{inputContent.Content}";
                 
@@ -118,6 +124,7 @@ namespace Explain.Cli.Commands
                 Console.WriteLine(aiResponse.Response);
                 Console.ResetColor();
 
+                // Save to history using the original input content (without history prepended)
                 _historyService.AddToHistory(inputContent.Content, aiResponse.Response, aiResponse.ModelName, aiResponse.PromptTokens, aiResponse.CompletionTokens, aiResponse.TotalTokens);
 
                 return 0;
