@@ -1,6 +1,7 @@
 using Explain.Cli.AI;
 using Explain.Cli.Commands.Explain;
 using OpenAI.Chat;
+using System.Threading;
 
 namespace Explain.Cli.Commands
 {
@@ -11,6 +12,7 @@ namespace Explain.Cli.Commands
     {
         private readonly IOpenAIServiceAgent _openAiServiceAgent;
         private readonly IConfigurationDisplayService _configurationDisplayService;
+        private readonly CancellationTokenSource _animationCts = new();
 
         public ExplainCommand(IOpenAIServiceAgent openAiServiceAgent, IConfigurationDisplayService configurationDisplayService)
         {
@@ -66,8 +68,51 @@ namespace Explain.Cli.Commands
                     new UserChatMessage(inputContent.Content)
                 };
 
-            var aiResponse = await _openAiServiceAgent.GetChatCompletionAsync(messages, parsedArgs.ThinkDeep);
-            return aiResponse;
+            // Start the thinking animation
+            var animationTask = ShowThinkingAnimationAsync(_animationCts.Token);
+
+            try
+            {
+                var aiResponse = await _openAiServiceAgent.GetChatCompletionAsync(messages, parsedArgs.ThinkDeep);
+                return aiResponse;
+            }
+            finally
+            {
+                // Stop the animation
+                _animationCts.Cancel();
+                try
+                {
+                    await animationTask;
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected when animation is canceled
+                }
+                Console.WriteLine(); // Add a newline after the animation
+            }
+        }
+
+        private async Task ShowThinkingAnimationAsync(CancellationToken cancellationToken)
+        {
+            string[] spinner = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" };
+            int spinnerIndex = 0;
+
+            Console.Write(" "); // Add a space before the animation
+
+            try
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    Console.Write($"\r {spinner[spinnerIndex]} thinking...");
+                    spinnerIndex = (spinnerIndex + 1) % spinner.Length;
+                    await Task.Delay(100, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Clean up the animation line
+                Console.Write("\r" + new string(' ', Console.WindowWidth - 1));
+            }
         }
 
         private void ShowVerboseInformation(ExplainInputContent inputContent, ExplainArguments parsedArgs)
@@ -76,7 +121,6 @@ namespace Explain.Cli.Commands
 
             if (parsedArgs.ThinkDeep)
                 Console.WriteLine("Think deep mode enabled."); 
-
 
             _configurationDisplayService.DisplayConfiguration();
 
