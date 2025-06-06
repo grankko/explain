@@ -34,10 +34,8 @@ namespace Explain.Cli.Commands
                 // Fetch history
                 var history = _historyService.GetHistoryAsText(5);
 
-                // todo: fix that history is added to history
-
                 // Process input from both command line and piped sources
-                var inputContent = await ExplainInputHandler.ProcessInputAsync(parsedArgs, history);
+                var inputContent = await ExplainInputHandler.ProcessInputAsync(parsedArgs);
 
                 // Validate that we have content to process
                 if (inputContent.IsEmpty)
@@ -53,7 +51,11 @@ namespace Explain.Cli.Commands
                 if (parsedArgs.IsVerbose)
                     ShowVerboseInformation(inputContent, parsedArgs);
 
-                var aiResponse = await GenerateAiResponse(inputContent, parsedArgs);
+                var inputContentWithHistory = inputContent;
+                if (!string.IsNullOrWhiteSpace(history))
+                    inputContentWithHistory.Content = $"{history}\n{inputContent.Content}";
+                
+                var aiResponse = await GenerateAiResponse(inputContentWithHistory, parsedArgs);
 
                 // Output the AI response in purple color
                 Console.ForegroundColor = ConsoleColor.Magenta;

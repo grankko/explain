@@ -72,7 +72,7 @@ namespace Explain.Cli.Storage
         {
             var history = GetHistory(limit);
             if (history.Count == 0)
-                return "No history available.";
+                return string.Empty;
 
             var sb = new StringBuilder();
             sb.AppendLine("=== History ===");

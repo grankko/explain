@@ -18,7 +18,7 @@ namespace Explain.Cli.Commands.Explain
         /// </summary>
         /// <param name="args">Parsed explain command arguments</param>
         /// <returns>Processed input content</returns>
-        public static async Task<ExplainInputContent> ProcessInputAsync(ExplainArguments args, string history)
+        public static async Task<ExplainInputContent> ProcessInputAsync(ExplainArguments args)
         {
             var result = new ExplainInputContent();
             
@@ -41,11 +41,7 @@ namespace Explain.Cli.Commands.Explain
             }
             
             var contentBuilder = new StringBuilder();
-
-            // Add history if provided
-            if (!string.IsNullOrWhiteSpace(history))
-                contentBuilder.AppendLine(history);
-
+            
             // Determine the content to process
             if (!string.IsNullOrWhiteSpace(pipedInput))
             {
