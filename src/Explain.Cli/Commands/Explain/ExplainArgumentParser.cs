@@ -35,6 +35,21 @@ namespace Explain.Cli.Commands.Explain
                 argsList.Remove("--think");
             }
 
+            // Check for show history flag
+            var showHistoryIndex = argsList.FindIndex(arg => arg == "--show-history");
+            if (showHistoryIndex != -1)
+            {
+                result.ShowHistory = true;
+                argsList.RemoveAt(showHistoryIndex);
+                
+                // Check if there's a number following --show-history
+                if (showHistoryIndex < argsList.Count && int.TryParse(argsList[showHistoryIndex], out var limit))
+                {
+                    result.HistoryLimit = limit;
+                    argsList.RemoveAt(showHistoryIndex);
+                }
+            }
+
             // The remaining argument should be the question
             if (argsList.Count > 0)
             {

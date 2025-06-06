@@ -1,4 +1,7 @@
-public interface IConfigurationDisplayService
+namespace Explain.Cli.Configuration
 {
-    void DisplayConfiguration();
+    public interface IConfigurationDisplayService
+    {
+        void DisplayConfiguration();
+    }
 }

@@ -36,13 +36,35 @@ All tests should pass without needing a real API key. Integration tests verify g
 
 ## Running the Application
 
-- `src/Explain.Cli/appsettings.json` contains placeholder settings but does not need a real API key. Set the `EXPLAIN_OPENAI_KEY` environment variable (and optional `EXPLAIN_OPENAI_MODEL_NAME` or `EXPLAIN_OPENAI_SMART_MODEL_NAME`) to override these values. The container used for evaluation typically provides `EXPLAIN_OPENAI_KEY` automatically.
-- Run the application with a question or by piping input:
+### Configuration
+The application uses a layered configuration approach:
 
-  ```bash
-  dotnet run --project src/Explain.Cli -- "Your question here"
-  echo "some text" | dotnet run --project src/Explain.Cli -- "Explain this"
-  ```
+1. **User Configuration Directory**: `~/.config/explain/`
+   - Configuration file: `~/.config/explain/appsettings.json` (optional)
+   - Database: `~/.config/explain/explain_history.sqlite`
+   - Directory created automatically on first run
+
+2. **Configuration Priority** (highest to lowest):
+   - Environment variables: `EXPLAIN_OPENAI_KEY`, `EXPLAIN_OPENAI_MODEL_NAME`, `EXPLAIN_OPENAI_SMART_MODEL_NAME`
+   - User config file: `~/.config/explain/appsettings.json`
+   - Application config file: `src/Explain.Cli/appsettings.json`
+
+3. **Development Setup**:
+   - `src/Explain.Cli/appsettings.json` contains placeholder settings but does not need a real API key
+   - Set the `EXPLAIN_OPENAI_KEY` environment variable (and optional model name variables) to override defaults
+   - The container used for evaluation typically provides `EXPLAIN_OPENAI_KEY` automatically
+
+### Running
+Run the application with a question or by piping input:
+
+```bash
+dotnet run --project src/Explain.Cli -- "Your question here"
+echo "some text" | dotnet run --project src/Explain.Cli -- "Explain this"
+
+# Use flags for additional functionality
+dotnet run --project src/Explain.Cli -- "complex question" --think --verbose
+dotnet run --project src/Explain.Cli -- --show-history 10
+```
 
 The `publish.sh` script can be used to build a standalone executable.
 

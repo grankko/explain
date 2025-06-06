@@ -26,8 +26,17 @@ A command-line tool that uses OpenAI's GPT models to explain anything you throw 
 
 2. **Configure your API key**:
    ```bash
+   # Option 1: Create user configuration (recommended)
+   mkdir -p ~/.config/explain
+   cp src/Explain.Cli/appsettings.example.json ~/.config/explain/appsettings.json
+   # Edit ~/.config/explain/appsettings.json with your OpenAI API key
+   
+   # Option 2: Use application directory configuration
    cp src/Explain.Cli/appsettings.example.json src/Explain.Cli/appsettings.json
-   # Edit appsettings.json with your OpenAI API key
+   # Edit src/Explain.Cli/appsettings.json with your OpenAI API key
+   
+   # Option 3: Use environment variables (works with any setup)
+   export EXPLAIN_OPENAI_KEY="your-api-key-here"
    ```
 
 3. **Build and publish**:
@@ -41,6 +50,28 @@ A command-line tool that uses OpenAI's GPT models to explain anything you throw 
    # The publish script creates a self-contained executable at publish/explain
    # You can copy it to your PATH or use the provided wrapper script
    ```
+
+## Configuration and Data Storage
+
+The `explain` CLI uses a user configuration directory for storing settings and data:
+
+- **Configuration Directory**: `~/.config/explain/`
+- **Database Location**: `~/.config/explain/explain_history.sqlite`
+- **User Config File**: `~/.config/explain/appsettings.json` (optional)
+
+### Configuration Priority
+
+The application loads configuration in the following order (higher priority overrides lower):
+
+1. **Command line arguments** (highest priority)
+2. **Environment variables**: 
+   - `EXPLAIN_OPENAI_KEY`
+   - `EXPLAIN_OPENAI_MODEL_NAME` 
+   - `EXPLAIN_OPENAI_SMART_MODEL_NAME`
+3. **User configuration file**: `~/.config/explain/appsettings.json`
+4. **Application configuration file**: `src/Explain.Cli/appsettings.json` (lowest priority)
+
+The configuration directory and database are automatically created when the application first runs.
 
 ## Usage
 
@@ -74,6 +105,31 @@ cat main.py | explain "What does this Python code do?"
 # Handle error messages (stderr)
 dmesg 2>&1 | explain "Why did this fail?"
 ```
+
+### History Management
+View your previous questions and explanations:
+```bash
+# Show last 5 questions (default)
+explain --show-history
+
+# Show last 10 questions
+explain --show-history 10
+
+# Show all history
+explain --show-history 0
+```
+
+**Note**: The `--show-history` flag cannot be combined with other input methods (questions, piped content, or other flags).
+
+### Command Line Options
+
+- `--verbose`: Display detailed configuration and processing information
+- `--think`: Use advanced reasoning mode with o1 models for complex analysis
+- `--show-history [number]`: Display previous questions and explanations
+  - Without number: Shows last 5 entries (default)
+  - With number: Shows specified number of entries
+  - With 0: Shows all history entries
+  - Cannot be combined with other input or flags
 
 ### Building and Testing
 

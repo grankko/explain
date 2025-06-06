@@ -1,5 +1,7 @@
 using Explain.Cli.AI;
 using Explain.Cli.Commands.Explain;
+using Explain.Cli.Configuration;
+using Explain.Cli.Storage;
 using OpenAI.Chat;
 using System.Threading;
 
@@ -11,12 +13,14 @@ namespace Explain.Cli.Commands
     public class ExplainCommand : ICommand
     {
         private readonly IOpenAIServiceAgent _openAiServiceAgent;
+        private readonly IHistoryService _historyService;
         private readonly IConfigurationDisplayService _configurationDisplayService;
         private readonly CancellationTokenSource _animationCts = new();
 
-        public ExplainCommand(IOpenAIServiceAgent openAiServiceAgent, IConfigurationDisplayService configurationDisplayService)
+        public ExplainCommand(IOpenAIServiceAgent openAiServiceAgent, IHistoryService historyService, IConfigurationDisplayService configurationDisplayService)
         {
             _openAiServiceAgent = openAiServiceAgent;
+            _historyService = historyService;
             _configurationDisplayService = configurationDisplayService;
         }
 
@@ -26,6 +30,34 @@ namespace Explain.Cli.Commands
             {
                 // Parse command line arguments
                 var parsedArgs = ExplainArgumentParser.ParseArguments(args);
+
+                // Handle show history request
+                if (parsedArgs.ShowHistory)
+                {
+                    // Validate that no other input is provided when showing history
+                    if (!string.IsNullOrWhiteSpace(parsedArgs.Question) || parsedArgs.ThinkDeep || Console.IsInputRedirected)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Error: --show-history cannot be combined with other input or flags.");
+                        Console.ResetColor();
+                        return 1;
+                    }
+
+                    // Display history
+                    var historyText = _historyService.GetHistoryAsText(parsedArgs.HistoryLimit);
+                    if (string.IsNullOrWhiteSpace(historyText))
+                    {
+                        Console.WriteLine("No history found.");
+                    }
+                    else
+                    {
+                        Console.WriteLine(historyText);
+                    }
+                    return 0;
+                }
+
+                // Fetch history for normal operation
+                var history = _historyService.GetHistoryAsText(5);
 
                 // Process input from both command line and piped sources
                 var inputContent = await ExplainInputHandler.ProcessInputAsync(parsedArgs);
@@ -44,12 +76,18 @@ namespace Explain.Cli.Commands
                 if (parsedArgs.IsVerbose)
                     ShowVerboseInformation(inputContent, parsedArgs);
 
-                string aiResponse = await GenerateAiResponse(inputContent, parsedArgs);
+                var inputContentWithHistory = inputContent;
+                if (!string.IsNullOrWhiteSpace(history))
+                    inputContentWithHistory.Content = $"{history}\n{inputContent.Content}";
+                
+                var aiResponse = await GenerateAiResponse(inputContentWithHistory, parsedArgs);
 
                 // Output the AI response in purple color
                 Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.WriteLine(aiResponse);
+                Console.WriteLine(aiResponse.Response);
                 Console.ResetColor();
+
+                _historyService.AddToHistory(inputContent.Content, aiResponse.Response, aiResponse.ModelName, aiResponse.PromptTokens, aiResponse.CompletionTokens, aiResponse.TotalTokens);
 
                 return 0;
             }
@@ -60,11 +98,12 @@ namespace Explain.Cli.Commands
             }
         }
 
-        private async Task<string> GenerateAiResponse(ExplainInputContent inputContent, ExplainArguments parsedArgs)
+        private async Task<AiResponse<string>> GenerateAiResponse(ExplainInputContent inputContent, ExplainArguments parsedArgs)
         {
             var messages = new List<ChatMessage>
                 {
                     new SystemChatMessage(Prompts.ExplainPrompt),
+                    new SystemChatMessage($"The current time is: {DateTime.Now:yyyy-MM-dd HH:mm:ss}"),
                     new UserChatMessage(inputContent.Content)
                 };
 

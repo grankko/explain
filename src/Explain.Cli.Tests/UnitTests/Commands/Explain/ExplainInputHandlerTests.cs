@@ -31,7 +31,8 @@ public class ExplainInputHandlerTests
         
         // Assert
         Assert.IsFalse(result.IsEmpty);
-        Assert.AreEqual(smallQuestion, result.Content);
+        Assert.IsTrue(result.Content.Contains(smallQuestion)); // Content should contain the question
+        Assert.IsTrue(result.Content.StartsWith("Question: ")); // Should be formatted as a question
         Assert.IsFalse(result.HasPipedInput);
     }
 }
