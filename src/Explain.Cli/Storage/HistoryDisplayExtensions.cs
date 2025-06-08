@@ -1,4 +1,5 @@
 using System.Text;
+using Explain.Cli.Extensions;
 
 namespace Explain.Cli.Storage
 {
@@ -13,34 +14,21 @@ namespace Explain.Cli.Storage
         /// <param name="historyEntries">The history entries to display</param>
         public static void DisplayColorized(this List<HistoryEntry> historyEntries)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("=== History ===");
-            Console.ResetColor();
+            Console.Out.WriteHeader("=== History ===");
 
             foreach (var entry in historyEntries)
             {
                 // Display timestamp and model info
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"[{entry.RecordedAt:yyyy-MM-dd HH:mm:ss}] Model: {entry.ModelName}");
-                Console.ResetColor();
+                Console.Out.WriteInfo($"[{entry.RecordedAt:yyyy-MM-dd HH:mm:ss}] Model: {entry.ModelName}");
 
                 // Display input with label
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write("Input: ");
-                Console.ResetColor();
-                Console.WriteLine(entry.InputText);
+                Console.Out.WriteLabelAndContent("Input: ", entry.InputText, ConsoleColor.Cyan);
 
                 // Display output with label (using same color as AI responses)
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write("Output: ");
-                Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.WriteLine(entry.OutputText);
-                Console.ResetColor();
+                Console.Out.WriteLabelAndContent("Output: ", entry.OutputText, ConsoleColor.Cyan, ConsoleColor.Magenta);
 
                 // Separator line
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(new string('-', 10));
-                Console.ResetColor();
+                Console.Out.WriteSeparator();
             }
         }
 

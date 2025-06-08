@@ -1,6 +1,7 @@
 using Explain.Cli.AI;
 using Explain.Cli.Commands.Explain;
 using Explain.Cli.Configuration;
+using Explain.Cli.Extensions;
 using Explain.Cli.Storage;
 using OpenAI.Chat;
 using System.Text;
@@ -38,9 +39,7 @@ namespace Explain.Cli.Commands
                     // Validate that no other input is provided when showing history
                     if (!string.IsNullOrWhiteSpace(parsedArgs.Question) || parsedArgs.ThinkDeep || parsedArgs.ClearHistory || Console.IsInputRedirected)
                     {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Error: --show-history cannot be combined with other input or flags.");
-                        Console.ResetColor();
+                        Console.Out.WriteError("Error: --show-history cannot be combined with other input or flags.");
                         return 1;
                     }
 
@@ -63,9 +62,7 @@ namespace Explain.Cli.Commands
                     // Validate that no other input is provided when clearing history
                     if (!string.IsNullOrWhiteSpace(parsedArgs.Question) || parsedArgs.ThinkDeep || parsedArgs.ShowHistory)
                     {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Error: --clear-history cannot be combined with other input or flags.");
-                        Console.ResetColor();
+                        Console.Out.WriteError("Error: --clear-history cannot be combined with other input or flags.");
                         return 1;
                     }
 
@@ -77,9 +74,7 @@ namespace Explain.Cli.Commands
                     if (string.Equals(confirmation?.Trim(), "yes", StringComparison.OrdinalIgnoreCase))
                     {
                         _historyService.ClearHistory();
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("History cleared successfully.");
-                        Console.ResetColor();
+                        Console.Out.WriteSuccess("History cleared successfully.");
                     }
                     else
                     {
@@ -122,9 +117,7 @@ namespace Explain.Cli.Commands
                 var aiResponse = await GenerateAiResponse(inputContentWithHistory, parsedArgs);
 
                 // Output the AI response in purple color
-                Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.WriteLine(aiResponse.Response);
-                Console.ResetColor();
+                Console.Out.WriteAiResponse(aiResponse.Response);
 
                 // Save to history using the original input content (without history prepended)
                 _historyService.AddToHistory(inputContent.Content, aiResponse.Response, aiResponse.ModelName, aiResponse.PromptTokens, aiResponse.CompletionTokens, aiResponse.TotalTokens);

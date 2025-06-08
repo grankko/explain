@@ -1,4 +1,5 @@
 using System.Text;
+using Explain.Cli.Extensions;
 
 namespace Explain.Cli.Commands.Explain
 {
@@ -104,38 +105,29 @@ namespace Explain.Cli.Commands.Explain
         /// </summary>
         public static void ShowUsage()
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Explain CLI");
-            Console.WriteLine(new string('-', 20));
-            Console.ResetColor();
+            Console.Out.WriteHeader("Explain CLI");
+            Console.Out.WriteHeader(new string('-', 20));
 
             Console.WriteLine("Please provide a question to explain or pipe content to analyze.");
             Console.WriteLine();
 
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("Usage:");
-            Console.ResetColor();
+            Console.Out.WriteInfo("Usage:");
             Console.WriteLine("  explain \"your question here\" [--verbose] [--think]");
             Console.WriteLine("  cat file.txt | explain [\"specific question about the content\"] [--verbose] [--think]");
             Console.WriteLine("  explain --show-history [number]");
             Console.WriteLine("  explain --clear-history");
             Console.WriteLine();
 
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Options:");
-            Console.ResetColor();
+            Console.Out.WriteInfo("Options:");
             Console.WriteLine("  --verbose          Show detailed configuration and processing information");
             Console.WriteLine("  --think            Use advanced reasoning with smart models");
             Console.WriteLine("  --show-history [n] Show last n history entries (default: 5, cannot be combined with other input)");
             Console.WriteLine("  --clear-history    Clear all history (requires confirmation, cannot be combined with other input)");
             Console.WriteLine();
 
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Input limits:");
-            Console.ResetColor();
+            Console.Out.WriteInfo("Input limits:");
             Console.WriteLine($"  Regular mode: ~{MAX_INPUT_TOKENS_REGULAR:N0} tokens (~{MAX_INPUT_TOKENS_REGULAR * CHARS_PER_TOKEN / 1024:N0}KB)");
             Console.WriteLine($"  Smart mode:   ~{MAX_INPUT_TOKENS_SMART:N0} tokens (~{MAX_INPUT_TOKENS_SMART * CHARS_PER_TOKEN / 1024:N0}KB)");
-            Console.ResetColor();
         }
 
         /// <summary>
