@@ -1,4 +1,3 @@
-using System.Text;
 using Explain.Cli.Configuration;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
@@ -68,25 +67,7 @@ namespace Explain.Cli.Storage
             command.ExecuteNonQuery();
         }
 
-        public string GetHistoryAsText(int limit = 5)
-        {
-            var history = GetHistory(limit);
-            if (history.Count == 0)
-                return string.Empty;
-
-            var sb = new StringBuilder();
-            sb.AppendLine("=== History ===");
-            foreach (var entry in history)
-            {
-                sb.AppendLine($"[{entry.RecordedAt:yyyy-MM-dd HH:mm:ss}] Model: {entry.ModelName}");
-                sb.AppendLine($"Input: {entry.InputText}");
-                sb.AppendLine($"Output: {entry.OutputText}");
-                sb.AppendLine(new string('-', 10));
-            }
-            return sb.ToString();
-        }
-
-        private List<HistoryEntry> GetHistory(int limit = 5)
+        public List<HistoryEntry> GetHistory(int limit = 5)
         {
             var history = new List<HistoryEntry>();
 
