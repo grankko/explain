@@ -18,7 +18,7 @@ namespace Explain.Cli.Commands.Explain
         /// Processes input from both piped content and command line arguments for the explain command.
         /// </summary>
         /// <param name="args">Parsed explain command arguments</param>
-        /// <returns>Processed input content</returns>
+        /// <returns>Processed input content with separated piped and argument content</returns>
         public static async Task<ExplainInputContent> ProcessInputAsync(ExplainArguments args)
         {
             var result = new ExplainInputContent();
@@ -33,7 +33,6 @@ namespace Explain.Cli.Commands.Explain
                 {
                     pipedInput = await Console.In.ReadToEndAsync();
                     pipedInput = pipedInput?.Trim();
-                    result.HasPipedInput = !string.IsNullOrWhiteSpace(pipedInput);
                 }
                 catch
                 {
@@ -41,30 +40,16 @@ namespace Explain.Cli.Commands.Explain
                 }
             }
             
-            var contentBuilder = new StringBuilder();
-
-            // Determine the content to process
+            // Populate separate content fields
             if (!string.IsNullOrWhiteSpace(pipedInput))
-            {
-                // If we have piped input, use it as the content to explain
-                contentBuilder.AppendLine($"Piped content:");
-                contentBuilder.AppendLine(pipedInput);
-                contentBuilder.AppendLine(new string('-', 10));
-
-                // If there's also a command line question, treat it as a specific question about the piped content
-                if (!string.IsNullOrWhiteSpace(args.Question))
-                    contentBuilder.AppendLine($"Question: {args.Question}");
-
-            }
-            else if (!string.IsNullOrWhiteSpace(args.Question))
-                // No piped input, use the command line question
-                contentBuilder.AppendLine($"Question: {args.Question}");
-
-            result.Content = contentBuilder.ToString();
+                result.PipedContent = pipedInput;
+                
+            if (!string.IsNullOrWhiteSpace(args.Question))
+                result.ArgumentContent = args.Question;
 
             // Validate input length if we have content
             if (!result.IsEmpty)
-                ValidateInputLength(result.Content, args.ThinkDeep, args.IsVerbose);
+                ValidateInputLength(result.ComposeForAI(), args.ThinkDeep, args.IsVerbose);
 
             return result;
         }

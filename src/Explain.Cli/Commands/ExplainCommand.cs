@@ -104,23 +104,16 @@ namespace Explain.Cli.Commands
                 if (parsedArgs.IsVerbose)
                     ShowVerboseInformation(inputContent, parsedArgs);
 
-                // Create a copy of input content for adding history (don't modify the original)
-                var inputContentWithHistory = new ExplainInputContent
-                {
-                    Content = inputContent.Content,
-                    HasPipedInput = inputContent.HasPipedInput
-                };
+                // Create input content with history prepended for AI processing
+                var aiInputContent = CreateInputContentWithHistory(inputContent, history);
                 
-                if (!string.IsNullOrWhiteSpace(history))
-                    inputContentWithHistory.Content = $"{history}\n{inputContent.Content}";
-                
-                var aiResponse = await GenerateAiResponse(inputContentWithHistory, parsedArgs);
+                var aiResponse = await GenerateAiResponse(aiInputContent, parsedArgs);
 
                 // Output the AI response in purple color
                 Console.Out.WriteAiResponse(aiResponse.Response);
 
-                // Save to history using the original input content (without history prepended)
-                _historyService.AddToHistory(inputContent.Content, aiResponse.Response, aiResponse.ModelName, aiResponse.PromptTokens, aiResponse.CompletionTokens, aiResponse.TotalTokens);
+                // Save to history using the raw user input (without AI prompt formatting)
+                _historyService.AddToHistory(inputContent.GetRawUserInput(), aiResponse.Response, aiResponse.ModelName, aiResponse.PromptTokens, aiResponse.CompletionTokens, aiResponse.TotalTokens);
 
                 return 0;
             }
@@ -168,6 +161,29 @@ namespace Explain.Cli.Commands
             }
         }
 
+        /// <summary>
+        /// Creates an input content instance with history prepended for AI processing.
+        /// </summary>
+        /// <param name="originalInput">The original input content</param>
+        /// <param name="history">The history text to prepend</param>
+        /// <returns>Input content with history included for AI processing</returns>
+        private ExplainInputContent CreateInputContentWithHistory(ExplainInputContent originalInput, string history)
+        {
+            // If no history, return the original input
+            if (string.IsNullOrWhiteSpace(history))
+                return originalInput;
+                
+            // Create new content with history prepended to the AI composition
+            var contentWithHistory = new ExplainInputContent
+            {
+                PipedContent = originalInput.PipedContent,
+                ArgumentContent = originalInput.ArgumentContent
+            };
+            
+            // Override the ComposeForAI method result by creating a wrapper
+            return new ExplainInputContentWithHistory(contentWithHistory, history);
+        }
+
         private void ShowVerboseInformation(ExplainInputContent inputContent, ExplainArguments parsedArgs)
         {
             Console.WriteLine("Verbose mode enabled.");
@@ -177,10 +193,18 @@ namespace Explain.Cli.Commands
 
             _configurationDisplayService.DisplayConfiguration();
 
-            Console.WriteLine($"Content to explain: {inputContent.Content}");
-            
             if (inputContent.HasPipedInput)
+            {
                 Console.WriteLine("Input received from pipe.");
+                Console.WriteLine($"Piped content: {inputContent.PipedContent}");
+            }
+            
+            if (inputContent.HasArgumentInput)
+            {
+                Console.WriteLine($"Argument content: {inputContent.ArgumentContent}");
+            }
+            
+            Console.WriteLine($"Composed content for AI: {inputContent.ComposeForAI()}");
         }
     }
 }
