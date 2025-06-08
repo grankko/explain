@@ -52,7 +52,7 @@ namespace Explain.Cli.Commands
                     }
                     else
                     {
-                        DisplayColorizedHistory(historyEntries);
+                        historyEntries.DisplayColorized();
                     }
                     return 0;
                 }
@@ -90,7 +90,7 @@ namespace Explain.Cli.Commands
 
                 // Fetch history for normal operation and format it for AI context
                 var historyForAI = _historyService.GetHistory(5);
-                var history = FormatHistoryForAI(historyForAI);
+                var history = historyForAI.FormatForAI();
 
                 // Process input from both command line and piped sources
                 var inputContent = await ExplainInputHandler.ProcessInputAsync(parsedArgs);
@@ -209,50 +209,6 @@ namespace Explain.Cli.Commands
             
             if (inputContent.HasPipedInput)
                 Console.WriteLine("Input received from pipe.");
-        }
-
-        private void DisplayColorizedHistory(List<HistoryEntry> historyEntries)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("=== History ===");
-            Console.ResetColor();
-
-            foreach (var entry in historyEntries)
-            {
-                // Display timestamp and model info
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"[{entry.RecordedAt:yyyy-MM-dd HH:mm:ss}] Model: {entry.ModelName}");
-                Console.ResetColor();
-
-                // Display input in green (same color scheme as normal operations)
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"Input: {entry.InputText}");
-                Console.ResetColor();
-
-                // Display output in magenta (same color as AI responses)
-                Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.WriteLine($"Output: {entry.OutputText}");
-                Console.ResetColor();
-
-                Console.WriteLine(new string('-', 10));
-            }
-        }
-
-        private string FormatHistoryForAI(List<HistoryEntry> historyEntries)
-        {
-            if (historyEntries.Count == 0)
-                return string.Empty;
-
-            var sb = new StringBuilder();
-            sb.AppendLine("=== History ===");
-            foreach (var entry in historyEntries)
-            {
-                sb.AppendLine($"[{entry.RecordedAt:yyyy-MM-dd HH:mm:ss}] Model: {entry.ModelName}");
-                sb.AppendLine($"Input: {entry.InputText}");
-                sb.AppendLine($"Output: {entry.OutputText}");
-                sb.AppendLine(new string('-', 10));
-            }
-            return sb.ToString();
         }
     }
 }
