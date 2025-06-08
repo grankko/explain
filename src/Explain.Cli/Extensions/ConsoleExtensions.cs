@@ -130,15 +130,39 @@ namespace Explain.Cli.Extensions
         /// <param name="content">The content text</param>
         /// <param name="labelColor">The color for the label</param>
         /// <param name="contentColor">The color for the content (optional, defaults to default console color)</param>
-        public static void WriteLabelAndContent(this TextWriter console, string label, string content, 
+        public static void WriteLabelAndContent(this TextWriter console, string label, string content,
             ConsoleColor labelColor, ConsoleColor? contentColor = null)
         {
             console.WriteColored(label, labelColor);
-            
+
             if (contentColor.HasValue)
                 console.WriteLineColored(content, contentColor.Value);
             else
                 Console.WriteLine(content);
         }
+        
+
+        public static async Task ShowThinkingAnimationAsync(this TextWriter console, CancellationToken cancellationToken, string label)
+        {
+            string[] spinner = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" };
+            int spinnerIndex = 0;
+
+            Console.Write(" "); // Add a space before the animation
+
+            try
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    Console.Write($"\r {spinner[spinnerIndex]} {label}");
+                    spinnerIndex = (spinnerIndex + 1) % spinner.Length;
+                    await Task.Delay(100, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Clean up the animation line
+                Console.Write("\r" + new string(' ', Console.WindowWidth - 1));
+            }
+        }        
     }
 }

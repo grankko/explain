@@ -141,7 +141,11 @@ namespace Explain.Cli.Commands
                 };
 
             // Start the thinking animation
-            var animationTask = ShowThinkingAnimationAsync(_animationCts.Token, parsedArgs.ThinkDeep);
+            var label = "thinking..";
+            if (parsedArgs.ThinkDeep) 
+                label = "thinking deeply..";
+
+            var animationTask = Console.Out.ShowThinkingAnimationAsync(_animationCts.Token, label);
 
             try
             {
@@ -161,31 +165,6 @@ namespace Explain.Cli.Commands
                     // Expected when animation is canceled
                 }
                 Console.WriteLine(); // Add a newline after the animation
-            }
-        }
-
-        private async Task ShowThinkingAnimationAsync(CancellationToken cancellationToken, bool thinkDeep)
-        {
-            var thinkingLabel = thinkDeep ? " thinking deeply.." : " thinking..";
-
-            string[] spinner = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" };
-            int spinnerIndex = 0;
-
-            Console.Write(" "); // Add a space before the animation
-
-            try
-            {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    Console.Write($"\r {spinner[spinnerIndex]} {thinkingLabel}");
-                    spinnerIndex = (spinnerIndex + 1) % spinner.Length;
-                    await Task.Delay(100, cancellationToken);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // Clean up the animation line
-                Console.Write("\r" + new string(' ', Console.WindowWidth - 1));
             }
         }
 
