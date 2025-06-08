@@ -78,7 +78,7 @@ namespace Explain.Cli.Storage
             command.CommandText = @"
             SELECT Id, RecordedAt, InputText, OutputText, ModelName, PromptTokens, CompletionTokens, TotalTokens
             FROM History
-            ORDER BY RecordedAt DESC
+            ORDER BY RecordedAt
             LIMIT $limit;";
             command.Parameters.AddWithValue("$limit", limit);
 
