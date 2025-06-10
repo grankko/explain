@@ -34,6 +34,8 @@ A command-line tool that uses OpenAI's GPT models to explain anything you throw 
 
 2. **Configure your API key**:
    ```bash
+   # Depending on how you do this you might be exposing that api key more than you should
+   #
    # Option 1: Create user configuration (recommended)
    mkdir -p ~/.config/explain
    cp src/Explain.Cli/appsettings.example.json ~/.config/explain/appsettings.json

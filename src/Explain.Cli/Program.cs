@@ -33,7 +33,7 @@ public class Program
     public static ServiceProvider CreateServiceProvider(string[] args)
     {
         // Ensure the config directory exists
-        ConfigurationPathProvider.EnsureConfigDirectoryExists();
+        ConfigurationPathProvider.EnsureApplicationDirectoriesExists();
         
         // Build configuration
         var envOverrides = new Dictionary<string, string?>
@@ -85,11 +85,8 @@ public class Program
             storageConfig.Bind(storageOptions);
             
             // If connection string contains placeholder or is empty, use default path
-            if (string.IsNullOrEmpty(storageOptions.ConnectionString) || 
-                storageOptions.ConnectionString.Contains("{UserConfigDir}"))
-            {
+            if (string.IsNullOrEmpty(storageOptions.ConnectionString))
                 storageOptions.ConnectionString = $"Data Source={ConfigurationPathProvider.GetDefaultDatabasePath()}";
-            }
         });
         
         services.Configure<OpenAiOptions>(configuration.GetSection(OpenAiOptions.SectionName));
