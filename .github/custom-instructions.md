@@ -82,4 +82,3 @@ The `publish.sh` script can be used to build a standalone executable.
 - Prefer a small number of meaningful tests over a large suite of shallow ones.
 - Tests are designed to run without external dependencies and handle missing API keys gracefully.
 - Integration tests include timeout mechanisms and proper process management to prevent environment lockup.
-
