@@ -1,4 +1,3 @@
-using System.Text;
 using Explain.Cli.Extensions;
 
 namespace Explain.Cli.Commands.Explain
@@ -106,6 +105,7 @@ namespace Explain.Cli.Commands.Explain
             Console.Out.WriteInfo("Options:");
             Console.WriteLine("  --verbose          Show detailed configuration and processing information");
             Console.WriteLine("  --think            Use advanced reasoning with smart models");
+            Console.WriteLine("  --include-history [n] Include last n history entries in AI context (default: 3)");
             Console.WriteLine("  --show-history [n] Show last n history entries (default: 5, cannot be combined with other input)");
             Console.WriteLine("  --clear-history    Clear all history (requires confirmation, cannot be combined with other input)");
             Console.WriteLine();

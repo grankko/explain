@@ -1,5 +1,3 @@
-using System;
-
 namespace Explain.Cli.Extensions
 {
     /// <summary>

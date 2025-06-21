@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Explain.Cli;
 using Explain.Cli.AI;
 using Explain.Cli.Commands;
 using Explain.Cli.Configuration;

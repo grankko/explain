@@ -16,6 +16,7 @@ A command-line tool that uses OpenAI's GPT models to explain anything you throw 
 - **Smart Mode**: Advanced reasoning with o1 models for complex topics
 - **Verbose Mode**: Detailed configuration and processing information
 - **Input Validation**: Automatic token counting and size limits
+- **History**: Stores history in a local sqlite database
 
 ## Installation
 
@@ -91,6 +92,19 @@ explain "What is machine learning?"
 explain "How do I list hidden files in Linux?"
 explain "Explain quantum computing in simple terms"
 ```
+
+### Including History Context
+Include previous conversations for context-aware responses:
+```bash
+# Include last 3 history entries (default)
+explain "What about supervised learning?" --include-history
+
+# Include last 5 history entries  
+explain "Can you elaborate on that?" --include-history 5
+
+# Include all history entries
+explain "Summarize our entire conversation" --include-history 0
+```
 ### Smart Mode
 For complex topics requiring deep reasoning:
 ```bash
@@ -141,6 +155,11 @@ explain --clear-history
 
 - `--verbose`: Display detailed configuration and processing information
 - `--think`: Use advanced reasoning mode with o1 models for complex analysis
+- `--include-history [number]`: Include previous questions and explanations as context
+  - Without number: Includes last 3 entries (default)
+  - With number: Includes specified number of entries
+  - With 0: Includes all history entries
+  - History is NOT included by default - this is an opt-in feature
 - `--show-history [number]`: Display previous questions and explanations
   - Without number: Shows last 5 entries (default)
   - With number: Shows specified number of entries

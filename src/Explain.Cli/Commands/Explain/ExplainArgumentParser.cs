@@ -50,6 +50,21 @@ namespace Explain.Cli.Commands.Explain
                 }
             }
 
+            // Check for include history flag
+            var includeHistoryIndex = argsList.FindIndex(arg => arg == "--include-history");
+            if (includeHistoryIndex != -1)
+            {
+                result.IncludeHistory = true;
+                argsList.RemoveAt(includeHistoryIndex);
+                
+                // Check if there's a number following --include-history
+                if (includeHistoryIndex < argsList.Count && int.TryParse(argsList[includeHistoryIndex], out var includeLimit))
+                {
+                    result.IncludeHistoryLimit = includeLimit;
+                    argsList.RemoveAt(includeHistoryIndex);
+                }
+            }
+
             // Check for clear history flag
             if (argsList.Contains("--clear-history"))
             {

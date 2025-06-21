@@ -4,8 +4,6 @@ using Explain.Cli.Configuration;
 using Explain.Cli.Extensions;
 using Explain.Cli.Storage;
 using OpenAI.Chat;
-using System.Text;
-using System.Threading;
 
 namespace Explain.Cli.Commands
 {
@@ -83,9 +81,13 @@ namespace Explain.Cli.Commands
                     return 0;
                 }
 
-                // Fetch history for normal operation and format it for AI context
-                var historyForAI = _historyService.GetHistory(5);
-                var history = historyForAI.FormatForAI();
+                // Fetch history only if --include-history flag is present
+                var history = string.Empty;
+                if (parsedArgs.IncludeHistory)
+                {
+                    var historyForAI = _historyService.GetHistory(parsedArgs.IncludeHistoryLimit);
+                    history = historyForAI.FormatForAI();
+                }
 
                 // Process input from both command line and piped sources
                 var inputContent = await ExplainInputHandler.ProcessInputAsync(parsedArgs);

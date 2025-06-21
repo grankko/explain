@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-
 namespace Explain.Cli.Configuration
 {
     public static class ConfigurationPathProvider

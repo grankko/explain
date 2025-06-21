@@ -199,6 +199,8 @@ public class ExplainArgumentParserTests
         // Assert
         Assert.IsFalse(result.ShowHistory);
         Assert.AreEqual(5, result.HistoryLimit); // Default value even when not using --show-history
+        Assert.IsFalse(result.IncludeHistory);
+        Assert.AreEqual(3, result.IncludeHistoryLimit); // Default value even when not using --include-history
         Assert.IsFalse(result.IsVerbose);
         Assert.IsFalse(result.ThinkDeep);
         Assert.AreEqual("simple question", result.Question);
@@ -216,6 +218,8 @@ public class ExplainArgumentParserTests
         // Assert
         Assert.IsFalse(result.ShowHistory);
         Assert.AreEqual(5, result.HistoryLimit);
+        Assert.IsFalse(result.IncludeHistory);
+        Assert.AreEqual(3, result.IncludeHistoryLimit);
         Assert.IsFalse(result.IsVerbose);
         Assert.IsFalse(result.ThinkDeep);
         Assert.AreEqual(string.Empty, result.Question);
@@ -233,6 +237,8 @@ public class ExplainArgumentParserTests
         // Assert
         Assert.IsFalse(result.ShowHistory);
         Assert.AreEqual(5, result.HistoryLimit);
+        Assert.IsFalse(result.IncludeHistory);
+        Assert.AreEqual(3, result.IncludeHistoryLimit);
         Assert.IsFalse(result.IsVerbose);
         Assert.IsFalse(result.ThinkDeep);
         Assert.AreEqual(string.Empty, result.Question);
@@ -326,6 +332,130 @@ public class ExplainArgumentParserTests
         
         // Assert
         Assert.IsFalse(result.ClearHistory);
+        Assert.AreEqual("simple question", result.Question);
+    }
+
+    [TestMethod]
+    public void ParseArguments_WithIncludeHistory_SetsIncludeHistoryTrue()
+    {
+        // Arrange
+        var args = new[] { "--include-history" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsTrue(result.IncludeHistory);
+        Assert.AreEqual(3, result.IncludeHistoryLimit); // Default value
+        Assert.AreEqual(string.Empty, result.Question);
+    }
+
+    [TestMethod]
+    public void ParseArguments_WithIncludeHistoryAndNumber_SetsCorrectLimit()
+    {
+        // Arrange
+        var args = new[] { "--include-history", "5" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsTrue(result.IncludeHistory);
+        Assert.AreEqual(5, result.IncludeHistoryLimit);
+        Assert.AreEqual(string.Empty, result.Question);
+    }
+
+    [TestMethod]
+    public void ParseArguments_WithIncludeHistoryAndZero_SetsZeroLimit()
+    {
+        // Arrange
+        var args = new[] { "--include-history", "0" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsTrue(result.IncludeHistory);
+        Assert.AreEqual(0, result.IncludeHistoryLimit);
+        Assert.AreEqual(string.Empty, result.Question);
+    }
+
+    [TestMethod]
+    public void ParseArguments_WithIncludeHistoryAndInvalidNumber_UsesDefaultLimit()
+    {
+        // Arrange
+        var args = new[] { "--include-history", "invalid" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsTrue(result.IncludeHistory);
+        Assert.AreEqual(3, result.IncludeHistoryLimit); // Default value
+        Assert.AreEqual("invalid", result.Question); // Invalid number becomes part of question
+    }
+
+    [TestMethod]
+    public void ParseArguments_WithIncludeHistoryAndQuestion_SetsQuestionCorrectly()
+    {
+        // Arrange
+        var args = new[] { "--include-history", "what", "is", "AI" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsTrue(result.IncludeHistory);
+        Assert.AreEqual(3, result.IncludeHistoryLimit); // Default since "what" is not a valid number
+        Assert.AreEqual("what is AI", result.Question);
+    }
+
+    [TestMethod]
+    public void ParseArguments_WithIncludeHistoryAndOtherFlags_SetsAllFlags()
+    {
+        // Arrange
+        var args = new[] { "--include-history", "7", "--verbose", "--think" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsTrue(result.IncludeHistory);
+        Assert.AreEqual(7, result.IncludeHistoryLimit);
+        Assert.IsTrue(result.IsVerbose);
+        Assert.IsTrue(result.ThinkDeep);
+        Assert.AreEqual(string.Empty, result.Question);
+    }
+
+    [TestMethod]
+    public void ParseArguments_WithIncludeHistoryAndShowHistory_SetsBothFlags()
+    {
+        // Arrange
+        var args = new[] { "--include-history", "2", "--show-history", "10" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsTrue(result.IncludeHistory);
+        Assert.AreEqual(2, result.IncludeHistoryLimit);
+        Assert.IsTrue(result.ShowHistory);
+        Assert.AreEqual(10, result.HistoryLimit);
+        Assert.AreEqual(string.Empty, result.Question);
+    }
+
+    [TestMethod]
+    public void ParseArguments_DefaultIncludeHistory_IsFalse()
+    {
+        // Arrange
+        var args = new[] { "simple", "question" };
+        
+        // Act
+        var result = ExplainArgumentParser.ParseArguments(args);
+        
+        // Assert
+        Assert.IsFalse(result.IncludeHistory);
+        Assert.AreEqual(3, result.IncludeHistoryLimit); // Default value
         Assert.AreEqual("simple question", result.Question);
     }
 }
