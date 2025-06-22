@@ -48,9 +48,10 @@ dotnet run --project src/Explain.Cli -- --clear-history
 - When a code file becomes too large, consider refactoring to maintain readeable and clear code, but avoid overly complex solutions.
 
 ## Testing Philosophy
+- When running tests, always use the teriminal and the command `dotnet test src/Explain.sln`.
 - Always prefer a small number of meaningful tests over a large suite of shallow ones.
 - Always separate UnitTests and IntegrationTests in their respective namespace.
-- Integration tests are **ignored by default** to prevent environment lockup
+- Integration tests are **ignored by default** to prevent environment lockup in agent environments.
 
 ## Dependency Philosophy
 - Always use the latest stable version of referenced packages.
@@ -59,3 +60,4 @@ dotnet run --project src/Explain.Cli -- --clear-history
 
 ## Misc
 - The `publish.sh` script can be used to build a standalone executable.
+- Always ask the user for confirmation before embarking on major refactoring.

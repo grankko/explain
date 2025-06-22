@@ -67,7 +67,7 @@ namespace Explain.Cli.Storage
             command.ExecuteNonQuery();
         }
 
-        public List<HistoryEntry> GetHistory(int limit = 5)
+        public List<HistoryEntry> GetLatestHistory(int limit = 5)
         {
             var history = new List<HistoryEntry>();
 
@@ -78,24 +78,24 @@ namespace Explain.Cli.Storage
             command.CommandText = @"
             SELECT Id, RecordedAt, InputText, OutputText, ModelName, PromptTokens, CompletionTokens, TotalTokens
             FROM History
-            ORDER BY RecordedAt
+            ORDER BY RecordedAt DESC
             LIMIT $limit;";
             command.Parameters.AddWithValue("$limit", limit);
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
             {
-                history.Add(new HistoryEntry
-                {
-                    Id = reader.GetInt32(0),
-                    RecordedAt = DateTime.Parse(reader.GetString(1)),
-                    InputText = reader.GetString(2),
-                    OutputText = reader.GetString(3),
-                    ModelName = reader.GetString(4),
-                    PromptTokens = reader.GetInt32(5),
-                    CompletionTokens = reader.GetInt32(6),
-                    TotalTokens = reader.GetInt32(7)
-                });
+            history.Add(new HistoryEntry
+            {
+                Id = reader.GetInt32(0),
+                RecordedAt = DateTime.Parse(reader.GetString(1)),
+                InputText = reader.GetString(2),
+                OutputText = reader.GetString(3),
+                ModelName = reader.GetString(4),
+                PromptTokens = reader.GetInt32(5),
+                CompletionTokens = reader.GetInt32(6),
+                TotalTokens = reader.GetInt32(7)
+            });
             }
 
             return history;

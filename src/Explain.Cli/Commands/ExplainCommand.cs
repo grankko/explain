@@ -10,12 +10,13 @@ namespace Explain.Cli.Commands
     /// <summary>
     /// Command implementation for explaining content using AI.
     /// </summary>
-    public class ExplainCommand : ICommand
+    public class ExplainCommand : ICommand, IDisposable
     {
         private readonly IOpenAIServiceAgent _openAiServiceAgent;
         private readonly IHistoryService _historyService;
         private readonly IConfigurationDisplayService _configurationDisplayService;
         private readonly CancellationTokenSource _animationCts = new();
+        private bool _disposed = false;
 
         public ExplainCommand(IOpenAIServiceAgent openAiServiceAgent, IHistoryService historyService, IConfigurationDisplayService configurationDisplayService)
         {
@@ -35,14 +36,14 @@ namespace Explain.Cli.Commands
                 if (parsedArgs.ShowHistory)
                 {
                     // Validate that no other input is provided when showing history
-                    if (!string.IsNullOrWhiteSpace(parsedArgs.Question) || parsedArgs.ThinkDeep || parsedArgs.ClearHistory || Console.IsInputRedirected)
+                    if (!ExplainArgumentValidator.ValidateShowHistory(parsedArgs))
                     {
                         Console.Out.WriteError("Error: --show-history cannot be combined with other input or flags.");
                         return 1;
                     }
 
                     // Display history
-                    var historyEntries = _historyService.GetHistory(parsedArgs.HistoryLimit);
+                    var historyEntries = _historyService.GetLatestHistory(parsedArgs.HistoryLimit);
                     if (historyEntries.Count == 0)
                     {
                         Console.WriteLine("No history found.");
@@ -58,34 +59,20 @@ namespace Explain.Cli.Commands
                 if (parsedArgs.ClearHistory)
                 {
                     // Validate that no other input is provided when clearing history
-                    if (!string.IsNullOrWhiteSpace(parsedArgs.Question) || parsedArgs.ThinkDeep || parsedArgs.ShowHistory)
+                    if (!ExplainArgumentValidator.ValidateClearHistory(parsedArgs))
                     {
                         Console.Out.WriteError("Error: --clear-history cannot be combined with other input or flags.");
                         return 1;
                     }
 
-                    // Prompt for confirmation
-                    Console.WriteLine("This will permanently delete all history entries.");
-                    Console.Write("Are you sure you want to continue? Type 'yes' to confirm: ");
-                    var confirmation = Console.ReadLine();
-                    
-                    if (string.Equals(confirmation?.Trim(), "yes", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _historyService.ClearHistory();
-                        Console.Out.WriteSuccess("History cleared successfully.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Operation cancelled.");
-                    }
-                    return 0;
+                    return HandleClearHistory();
                 }
 
                 // Fetch history only if --include-history flag is present
                 var history = string.Empty;
                 if (parsedArgs.IncludeHistory)
                 {
-                    var historyForAI = _historyService.GetHistory(parsedArgs.IncludeHistoryLimit);
+                    var historyForAI = _historyService.GetLatestHistory(parsedArgs.IncludeHistoryLimit);
                     history = historyForAI.FormatForAI();
                 }
 
@@ -124,6 +111,29 @@ namespace Explain.Cli.Commands
                 Console.WriteLine($"Error: {ex.Message}");
                 return 1;
             }
+        }
+
+        /// <summary>
+        /// Handles the clear history command with user confirmation.
+        /// </summary>
+        /// <returns>Exit code (0 for success, 1 for failure)</returns>
+        private int HandleClearHistory()
+        {
+            // Prompt for confirmation
+            Console.WriteLine("This will permanently delete all history entries.");
+            Console.Write("Are you sure you want to continue? Type 'yes' to confirm: ");
+            var confirmation = Console.ReadLine();
+            
+            if (string.Equals(confirmation?.Trim(), "yes", StringComparison.OrdinalIgnoreCase))
+            {
+                _historyService.ClearHistory();
+                Console.Out.WriteSuccess("History cleared successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Operation cancelled.");
+            }
+            return 0;
         }
 
         private async Task<AiResponse<string>> GenerateAiResponse(ExplainInputContent inputContent, ExplainArguments parsedArgs)
@@ -207,6 +217,21 @@ namespace Explain.Cli.Commands
             }
             
             Console.WriteLine($"Composed content for AI: {inputContent.ComposeForAI()}");
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed && disposing)
+            {
+                _animationCts?.Dispose();
+                _disposed = true;
+            }
         }
     }
 }

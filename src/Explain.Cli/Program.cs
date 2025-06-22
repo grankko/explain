@@ -12,10 +12,11 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        ServiceProvider? serviceProvider = null;
         try
         {
             // Build service provider
-            var serviceProvider = CreateServiceProvider(args);
+            serviceProvider = CreateServiceProvider(args);
             
             // Get the command and execute it
             var command = serviceProvider.GetRequiredService<ICommand>();
@@ -27,6 +28,10 @@ public class Program
         {
             Console.WriteLine($"Application terminated unexpectedly: {ex.Message}");
             return 1;
+        }
+        finally
+        {
+            serviceProvider?.Dispose();
         }
     }
     
