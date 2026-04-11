@@ -108,9 +108,9 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
                 throw new InvalidOperationException($"Cannot convert response to type {typeof(T).Name}.");
 
             aiResult.ModelName = result.Value.Model;
-            aiResult.PromptTokens = result.Value.Usage.InputTokenCount;
-            aiResult.CompletionTokens = result.Value.Usage.OutputTokenCount;
-            aiResult.TotalTokens = result.Value.Usage.TotalTokenCount;
+            aiResult.PromptTokens = Math.Max(0, result.Value.Usage.InputTokenCount);
+            aiResult.CompletionTokens = Math.Max(0, result.Value.Usage.OutputTokenCount);
+            aiResult.TotalTokens = Math.Max(0, result.Value.Usage.TotalTokenCount);
 
         }
         catch (Exception ex)

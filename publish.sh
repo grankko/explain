@@ -20,9 +20,25 @@ mkdir -p publish
 # Publish the application
 echo -e "${GREEN}Publishing Explain as a self-contained single-file application...${NC}"
 
+if [ -z "${RUNTIME_IDENTIFIER:-}" ]; then
+    ARCH="$(uname -m)"
+    case "$ARCH" in
+        x86_64|amd64)
+            RUNTIME_IDENTIFIER="linux-x64"
+            ;;
+        aarch64|arm64)
+            RUNTIME_IDENTIFIER="linux-arm64"
+            ;;
+        *)
+            echo -e "${RED}Unsupported architecture: $ARCH. Set RUNTIME_IDENTIFIER manually.${NC}"
+            exit 1
+            ;;
+    esac
+fi
+
 dotnet publish src/Explain.Cli/Explain.Cli.csproj \
     -c Release \
-    -r linux-x64 \
+    -r "$RUNTIME_IDENTIFIER" \
     -p:PublishSingleFile=true \
     -p:AssemblyName=explain \
     --self-contained \
