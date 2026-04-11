@@ -158,8 +158,10 @@ namespace Explain.Cli.Extensions
             }
             catch (OperationCanceledException)
             {
-                // Clean up the animation line
-                Console.Write("\r" + new string(' ', Console.WindowWidth - 1));
+                // Clean up the animation line. In non-interactive shells Console.WindowWidth
+                // can be 0, so guard against negative string lengths.
+                var width = Math.Max(0, Console.WindowWidth - 1);
+                Console.Write("\r" + new string(' ', width));
             }
         }        
     }
