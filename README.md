@@ -22,7 +22,7 @@ A command-line tool that uses OpenAI's GPT models to explain anything you throw 
 
 ### Prerequisites
 
-- [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) (for building from source)
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (for building from source)
 - OpenAI API key
 
 ### Quick Setup

@@ -11,7 +11,7 @@ public class ExplainCommandIntegrationTests
     public void TestInitialize()
     {
         // Get the built CLI executable path
-        _cliPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Explain.Cli", "bin", "Debug", "net9.0", "Explain.Cli.dll"));
+        _cliPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Explain.Cli", "bin", "Debug", "net10.0", "Explain.Cli.dll"));
     }
 
     [TestMethod]

@@ -4,7 +4,7 @@
 This repository contains a .NET command line application `explain` that uses OpenAI's API to answer questions or analyze piped input. It is primarily designed to run on Linux.
 
 ## Tech stack
-- dotnet 9
+- dotnet 10
 - C#
 
 ## Configuration

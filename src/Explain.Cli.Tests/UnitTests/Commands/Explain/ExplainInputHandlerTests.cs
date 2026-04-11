@@ -13,7 +13,7 @@ public class ExplainInputHandlerTests
         var args = new ExplainArguments { Question = largeQuestion, ThinkDeep = false };
         
         // Act & Assert
-        var exception = await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
             () => ExplainInputHandler.ProcessInputAsync(args));
         
         Assert.IsTrue(exception.Message.Contains("too large"));

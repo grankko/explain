@@ -14,7 +14,7 @@ public class OpenAIServiceAgentTests
         var options = Options.Create(new OpenAiOptions { ApiKey = "" });
         
         // Act & Assert
-        var exception = Assert.ThrowsException<InvalidOperationException>(
+        var exception = Assert.Throws<InvalidOperationException>(
             () => new OpenAIServiceAgent(options));
         
         Assert.IsTrue(exception.Message.Contains("OpenAI API key is missing"));
