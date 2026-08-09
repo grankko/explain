@@ -19,4 +19,13 @@ public class OpenAIServiceAgentTests
         
         Assert.IsTrue(exception.Message.Contains("OpenAI API key is missing"));
     }
+
+    [TestMethod]
+    public void OpenAiOptions_DefaultToGpt56Terra()
+    {
+        var options = new OpenAiOptions();
+
+        Assert.AreEqual("gpt-5.6-terra", options.ModelName);
+        Assert.AreEqual("gpt-5.6-terra", options.SmartModelName);
+    }
 }

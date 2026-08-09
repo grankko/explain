@@ -1,0 +1,5 @@
+model = "gpt-5.6-terra"
+web_search = "live"
+
+[mcp_servers.microsoft_docs]
+url = "https://learn.microsoft.com/api/mcp"

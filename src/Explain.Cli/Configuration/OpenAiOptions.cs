@@ -16,14 +16,14 @@ namespace Explain.Cli.Configuration
         public string ApiKey { get; set; } = string.Empty;
 
         /// <summary>
-        /// OpenAI Model to use (e.g., "gpt-4", "gpt-3.5-turbo")
+        /// OpenAI model to use for regular requests.
         /// </summary>  
-        public string ModelName { get; set; } = "gpt-4";
+        public string ModelName { get; set; } = "gpt-5.6-terra";
 
         /// <summary>
-        /// OpenAI Model to use for deep thinking(e.g., "o3", "o4-mini")
+        /// OpenAI model to use for requests made with --think.
         /// </summary>  
-        public string SmartModelName { get; set; } = "o4-mini";
+        public string SmartModelName { get; set; } = "gpt-5.6-terra";
 
         /// <summary>
         /// Optional: Organization ID

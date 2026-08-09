@@ -1,20 +1,18 @@
-using Microsoft.Extensions.Options;
-using OpenAI.Chat;
 using Explain.Cli.Configuration;
-using System.Text.Json;
-using System.ClientModel;
+using Microsoft.Extensions.Options;
+using OpenAI.Responses;
 
 namespace Explain.Cli.AI;
 
+#pragma warning disable OPENAI001
 /// <summary>
-/// Agent for interacting with the OpenAI API.
+/// Agent for interacting with the OpenAI Responses API.
 /// </summary>
 public class OpenAIServiceAgent : IOpenAIServiceAgent
 {
     private readonly OpenAiOptions _openAiOptions;
-    private ChatClient _chatClient;
-    private ChatClient _smartChatClient;
-    private bool _isVerbose = false;
+    private readonly ResponsesClient _responsesClient;
+    private bool _isVerbose;
 
     /// <summary>
     /// Gets or sets whether to show verbose output.
@@ -35,93 +33,95 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
                 "OpenAI API key is missing. Please update your appsettings.json file with a valid API key.");
         }
 
-        // Create the OpenAI ChatClient with the model and API key
-        _chatClient = new ChatClient(_openAiOptions.ModelName, _openAiOptions.ApiKey);
-        _smartChatClient = new ChatClient(_openAiOptions.SmartModelName, _openAiOptions.ApiKey);
+        _responsesClient = new ResponsesClient(_openAiOptions.ApiKey);
     }
 
-    public async Task<AiResponse<string>> GetChatCompletionAsync(List<ChatMessage> messages, bool thinkDeep)
+    public Task<AiResponse<string>> GetResponseAsync(IReadOnlyList<ResponseItem> messages, bool thinkDeep)
     {
-        return await GetTypedChatCompletionAsync<string>(messages, thinkDeep, null, null);
+        return GetTypedResponseAsync<string>(messages, thinkDeep, null, null);
     }
 
-    public async Task<AiResponse<T>> GetTypedChatCompletionAsync<T>(List<ChatMessage> messages, bool thinkDeep, string? schemaName, BinaryData? jsonSchema)
+    public async Task<AiResponse<T>> GetTypedResponseAsync<T>(
+        IReadOnlyList<ResponseItem> messages,
+        bool thinkDeep,
+        string? schemaName,
+        BinaryData? jsonSchema)
     {
-        AiResponse<T> aiResult;
-
         try
         {
-            var temperature = thinkDeep ? 1f : 0.1f; // Adjust temperature based on model complexity
+            var options = OpenAiResponseRequestFactory.Create(
+                _openAiOptions,
+                messages,
+                thinkDeep,
+                schemaName,
+                jsonSchema);
 
-            // Call the OpenAI API with chat completion options
-            var options = new ChatCompletionOptions
+            if (_isVerbose)
             {
-                Temperature = temperature,
-#pragma warning disable OPENAI001
-                Seed = 1235431345345L,
-#pragma warning restore OPENAI001
-            };
-
-            bool attemptedToUseStructuredOutput = false;
-
-            // Add structured output support if schema is provided
-            if (!string.IsNullOrWhiteSpace(schemaName) && jsonSchema != null)
-            {
-                attemptedToUseStructuredOutput = true;
-                options.ResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
-                    jsonSchemaFormatName: schemaName,
-                    jsonSchema: jsonSchema,
-                    jsonSchemaFormatDescription: $"Structured response according to {schemaName} schema",
-                    jsonSchemaIsStrict: true
-                );
-
-                if (_isVerbose)
+                Console.WriteLine($"Reasoning effort: {(thinkDeep ? "high" : "low")}");
+                Console.WriteLine("Web search available: yes (model decides when to use it)");
+                if (!string.IsNullOrWhiteSpace(schemaName) && jsonSchema is not null)
                     Console.WriteLine($"Using structured output with schema: {schemaName}");
             }
 
-            // Get the response from the API
-            ClientResult<ChatCompletion> result;
-            if (thinkDeep)
-                result = await _smartChatClient.CompleteChatAsync(messages, options);
-            else
-                result = await _chatClient.CompleteChatAsync(messages, options);
-
-            var textResponse = result.Value.Content.FirstOrDefault()?.Text;
-            if (string.IsNullOrWhiteSpace(textResponse))
-                throw new InvalidOperationException("Received empty response from OpenAI.");
-
-
-
-            // If structured output was attempted, deserialize to the specified type, if not, assume string response
-            if (attemptedToUseStructuredOutput)
-            {
-                var typedResponse = JsonSerializer.Deserialize<T>(textResponse)
-                    ?? throw new InvalidOperationException("Failed to deserialize OpenAI response.");
-
-                aiResult = new AiResponse<T>(typedResponse);
-            }
-            else if (typeof(T) == typeof(string))
-            {
-                aiResult = new AiResponse<T>((T)(object)textResponse!);
-            }
-            else
-                throw new InvalidOperationException($"Cannot convert response to type {typeof(T).Name}.");
-
-            aiResult.ModelName = result.Value.Model;
-            aiResult.PromptTokens = result.Value.Usage.InputTokenCount;
-            aiResult.CompletionTokens = result.Value.Usage.OutputTokenCount;
-            aiResult.TotalTokens = result.Value.Usage.TotalTokenCount;
-
+            ResponseResult response = await _responsesClient.CreateResponseAsync(options);
+            return MapResponse<T>(response, schemaName, jsonSchema);
         }
         catch (Exception ex)
         {
-            // Log the error only in verbose mode
             if (_isVerbose)
-                Console.WriteLine($"Error in GetChatCompletion: {ex.Message}");
+                Console.WriteLine($"Error in GetResponse: {ex.Message}");
 
             throw;
+        }
+    }
+
+    private AiResponse<T> MapResponse<T>(ResponseResult response, string? schemaName, BinaryData? jsonSchema)
+    {
+        var rawText = response.GetOutputText();
+        var webSearchUsed = response.OutputItems.Any(item => item is WebSearchCallResponseItem);
+        var citations = ExtractCitations(response);
+        var attemptedStructuredOutput = !string.IsNullOrWhiteSpace(schemaName) && jsonSchema is not null;
+        var aiResult = OpenAiResponseMapper.Map<T>(
+            rawText,
+            response.Model,
+            response.Usage.InputTokenCount,
+            response.Usage.OutputTokenCount,
+            response.Usage.TotalTokenCount,
+            webSearchUsed,
+            citations,
+            attemptedStructuredOutput);
+
+        if (_isVerbose)
+        {
+            Console.WriteLine($"Web search used: {(webSearchUsed ? "yes" : "no")}");
+            Console.WriteLine($"Sources returned: {aiResult.Sources.Count}");
         }
 
         return aiResult;
     }
+
+    private static IEnumerable<AiCitation> ExtractCitations(ResponseResult response)
+    {
+        var textOffset = 0;
+
+        foreach (var message in response.OutputItems.OfType<MessageResponseItem>())
+        {
+            foreach (var contentPart in message.Content)
+            {
+                var partText = contentPart.Text ?? string.Empty;
+                foreach (var annotation in contentPart.OutputTextAnnotations.OfType<UriCitationMessageAnnotation>())
+                {
+                    yield return new AiCitation(
+                        annotation.Title,
+                        annotation.Uri.ToString(),
+                        textOffset + annotation.StartIndex,
+                        textOffset + annotation.EndIndex);
+                }
+
+                textOffset += partText.Length;
+            }
+        }
+    }
 }
+#pragma warning restore OPENAI001

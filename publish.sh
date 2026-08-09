@@ -77,8 +77,8 @@ create_default_appsettings() {
 {
   "OpenAi": {
     "ApiKey": "your-openai-api-key-here",
-    "ModelName": "gpt-4",
-    "SmartModelName": "o1-mini"
+    "ModelName": "gpt-5.6-terra",
+    "SmartModelName": "gpt-5.6-terra"
   },
   "Logging": {
     "LogLevel": {

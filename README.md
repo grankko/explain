@@ -13,7 +13,9 @@ A command-line tool that uses OpenAI's GPT models to explain anything you throw 
 ## Features
 
 - **Multiple Input Methods**: Support for direct questions and piped content
-- **Smart Mode**: Advanced reasoning with o1 models for complex topics
+- **Current Answers**: GPT-5.6 Terra can search the web when a question needs up-to-date or uncertain facts
+- **Visible Sources**: Web-derived answers include numbered citations and source URLs in the terminal
+- **Smart Mode**: High reasoning effort for complex topics; regular mode uses low reasoning effort
 - **Verbose Mode**: Detailed configuration and processing information
 - **Input Validation**: Automatic token counting and size limits
 - **History**: Stores history in a local sqlite database
@@ -84,6 +86,10 @@ The application loads configuration in the following order (higher priority over
 
 The configuration directory and database are automatically created when the application first runs.
 
+Both model settings default to `gpt-5.6-terra`. Existing installations can keep separate overrides for regular and `--think` requests, but `--think` always requests high reasoning effort while regular mode requests low reasoning effort.
+
+Web search is available automatically—there is no search flag. The model decides whether a lookup is useful, and successful searches add a `Sources:` section with terminal-clickable URLs. Web searches are billed as tool calls in addition to model token usage.
+
 ## Usage
 
 ### Direct Questions
@@ -106,7 +112,7 @@ explain "Can you elaborate on that?" --include-history 5
 explain "Summarize our entire conversation" --include-history 0
 ```
 ### Smart Mode
-For complex topics requiring deep reasoning:
+For complex topics requiring high reasoning effort:
 ```bash
 explain "Analyze the trade-offs between microservices and monolithic architecture" --think
 ```
@@ -154,7 +160,7 @@ explain --clear-history
 ### Command Line Options
 
 - `--verbose`: Display detailed configuration and processing information
-- `--think`: Use advanced reasoning mode with o1 models for complex analysis
+- `--think`: Use high reasoning effort with the configured smart model
 - `--include-history [number]`: Include previous questions and explanations as context
   - Without number: Includes last 3 entries (default)
   - With number: Includes specified number of entries

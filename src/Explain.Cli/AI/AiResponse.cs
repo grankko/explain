@@ -12,4 +12,6 @@ public class AiResponse<T>
     public int PromptTokens { get; set; }
     public int CompletionTokens { get; set; }
     public int TotalTokens { get; set; }
+    public bool WebSearchUsed { get; set; }
+    public IReadOnlyList<AiSource> Sources { get; set; } = [];
 }

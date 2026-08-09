@@ -3,10 +3,11 @@ using Explain.Cli.Commands.Explain;
 using Explain.Cli.Configuration;
 using Explain.Cli.Extensions;
 using Explain.Cli.Storage;
-using OpenAI.Chat;
+using OpenAI.Responses;
 
 namespace Explain.Cli.Commands
 {
+#pragma warning disable OPENAI001
     /// <summary>
     /// Command implementation for explaining content using AI.
     /// </summary>
@@ -138,11 +139,11 @@ namespace Explain.Cli.Commands
 
         private async Task<AiResponse<string>> GenerateAiResponse(ExplainInputContent inputContent, ExplainArguments parsedArgs)
         {
-            var messages = new List<ChatMessage>
+            var messages = new List<ResponseItem>
                 {
-                    new SystemChatMessage(Prompts.ExplainPrompt),
-                    new SystemChatMessage($"The current time is: {DateTime.Now:yyyy-MM-dd HH:mm:ss}"),
-                    new UserChatMessage(inputContent.Content)
+                    ResponseItem.CreateSystemMessageItem(Prompts.ExplainPrompt),
+                    ResponseItem.CreateSystemMessageItem($"The current time is: {DateTime.Now:yyyy-MM-dd HH:mm:ss}"),
+                    ResponseItem.CreateUserMessageItem(inputContent.Content)
                 };
 
             // Start the thinking animation
@@ -154,7 +155,7 @@ namespace Explain.Cli.Commands
 
             try
             {
-                var aiResponse = await _openAiServiceAgent.GetChatCompletionAsync(messages, parsedArgs.ThinkDeep);
+                var aiResponse = await _openAiServiceAgent.GetResponseAsync(messages, parsedArgs.ThinkDeep);
                 return aiResponse;
             }
             finally
@@ -234,4 +235,5 @@ namespace Explain.Cli.Commands
             }
         }
     }
+#pragma warning restore OPENAI001
 }
