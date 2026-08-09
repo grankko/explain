@@ -5,10 +5,10 @@ A command-line tool that uses OpenAI's GPT models to explain anything you throw 
 ## Demo
 
 ### Basic input with arguments
-![Demo](media/basic.gif)
+![Basic input demo](media/basic.gif)
 
 ### Explain piped input
-![Demo](media/pipe.gif)
+![Piped input demo](media/pipe.gif)
 
 ## Features
 
