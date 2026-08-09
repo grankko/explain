@@ -1,4 +1,5 @@
 using OpenAI.Responses;
+using Explain.Cli.AI.Tools;
 
 namespace Explain.Cli.AI;
 
@@ -19,7 +20,11 @@ public interface IOpenAIServiceAgent
     /// <param name="messages">The chat messages to send</param>
     /// <param name="thinkDeep">Whether to use a more complex model for deeper thinking</param>
     /// <returns>The generated response</returns>
-    Task<AiResponse<string>> GetResponseAsync(IReadOnlyList<ResponseItem> messages, bool thinkDeep);
+    Task<AiResponse<string>> GetResponseAsync(
+        IReadOnlyList<ResponseItem> messages,
+        bool thinkDeep,
+        ILocalToolSession? localToolSession = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a response from OpenAI with optional structured output.
@@ -29,6 +34,12 @@ public interface IOpenAIServiceAgent
     /// <param name="schemaName">Optional schema name for structured output</param>
     /// <param name="jsonSchema">Optional JSON schema for structured output</param>
     /// <returns>The generated response</returns>
-    Task<AiResponse<T>> GetTypedResponseAsync<T>(IReadOnlyList<ResponseItem> messages, bool thinkDeep, string? schemaName, BinaryData? jsonSchema);
+    Task<AiResponse<T>> GetTypedResponseAsync<T>(
+        IReadOnlyList<ResponseItem> messages,
+        bool thinkDeep,
+        string? schemaName,
+        BinaryData? jsonSchema,
+        ILocalToolSession? localToolSession = null,
+        CancellationToken cancellationToken = default);
 }
 #pragma warning restore OPENAI001

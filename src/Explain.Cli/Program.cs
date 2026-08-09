@@ -1,6 +1,9 @@
 ﻿using Explain.Cli.AI;
+using Explain.Cli.AI.Context;
+using Explain.Cli.AI.Tools;
 using Explain.Cli.Commands;
 using Explain.Cli.Configuration;
+using Explain.Cli.Memory;
 using Explain.Cli.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -95,8 +98,17 @@ public class Program
         });
         
         services.Configure<OpenAiOptions>(configuration.GetSection(OpenAiOptions.SectionName));
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<ExplainDatabase>();
+        services.AddScoped<IResponsesApiClient, ResponsesApiClient>();
         services.AddScoped<IOpenAIServiceAgent, OpenAIServiceAgent>();
         services.AddScoped<IHistoryService, HistoryService>();
+        services.AddScoped<IMemoryService, MemoryService>();
+        services.AddScoped<ISystemProfileCollector, SystemProfileCollector>();
+        services.AddScoped<ISystemProfileService, SystemProfileService>();
+        services.AddScoped<IProjectScopeResolver, ProjectScopeResolver>();
+        services.AddScoped<IAiContextBuilder, AiContextBuilder>();
+        services.AddScoped<ILocalToolSessionFactory, MemoryToolSessionFactory>();
         services.AddScoped<IConfigurationDisplayService, ConfigurationDisplayService>();
         services.AddScoped<ICommand, ExplainCommand>();
 

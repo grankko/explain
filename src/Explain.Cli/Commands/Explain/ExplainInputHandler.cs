@@ -100,14 +100,23 @@ namespace Explain.Cli.Commands.Explain
             Console.WriteLine("  cat file.txt | explain [\"specific question about the content\"] [--verbose] [--think]");
             Console.WriteLine("  explain --show-history [number]");
             Console.WriteLine("  explain --clear-history");
+            Console.WriteLine("  explain --show-memory");
+            Console.WriteLine("  explain --clear-memory");
+            Console.WriteLine("  explain --refresh-system [\"optional question\"]");
+            Console.WriteLine("  explain --help");
             Console.WriteLine();
 
             Console.Out.WriteInfo("Options:");
             Console.WriteLine("  --verbose          Show detailed configuration and processing information");
             Console.WriteLine("  --think            Use advanced reasoning with smart models");
-            Console.WriteLine("  --include-history [n] Include last n history entries in AI context (default: 3)");
+            Console.WriteLine("  --include-history [n] Override automatic recent history with the last n entries (default: 3)");
+            Console.WriteLine("  --no-history       Ephemeral request: do not load or save history or memory");
             Console.WriteLine("  --show-history [n] Show last n history entries (default: 5, cannot be combined with other input)");
             Console.WriteLine("  --clear-history    Clear all history (requires confirmation, cannot be combined with other input)");
+            Console.WriteLine("  --show-memory      Show system, global, and project memories");
+            Console.WriteLine("  --clear-memory     Clear AI-created memories while retaining system facts");
+            Console.WriteLine("  --refresh-system   Refresh the local privacy-balanced system profile");
+            Console.WriteLine("  -h, --help         Show this help without making an AI request");
             Console.WriteLine();
 
             Console.Out.WriteInfo("Input limits:");

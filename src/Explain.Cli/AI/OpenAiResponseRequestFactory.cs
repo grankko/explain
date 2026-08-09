@@ -11,7 +11,8 @@ public static class OpenAiResponseRequestFactory
         IEnumerable<ResponseItem> inputItems,
         bool thinkDeep,
         string? schemaName = null,
-        BinaryData? jsonSchema = null)
+        BinaryData? jsonSchema = null,
+        IEnumerable<ResponseTool>? localTools = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(inputItems);
@@ -29,6 +30,13 @@ public static class OpenAiResponseRequestFactory
         };
 
         options.Tools.Add(ResponseTool.CreateWebSearchTool());
+        if (localTools is not null)
+        {
+            options.ParallelToolCallsEnabled = false;
+            foreach (var tool in localTools)
+                options.Tools.Add(tool);
+        }
+
         foreach (var inputItem in inputItems)
             options.InputItems.Add(inputItem);
 

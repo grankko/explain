@@ -1,25 +1,15 @@
-namespace Explain.Cli.Storage
+namespace Explain.Cli.Storage;
+
+public sealed class HistoryEntry
 {
-    public class HistoryEntry
-    {
-        public string InputText { get; set; } = string.Empty;
-        public string OutputText { get; set; } = string.Empty;
-        public string ModelName { get; set; } = string.Empty;
-        public int PromptTokens { get; set; }
-        public int CompletionTokens { get; set; }
-        public int TotalTokens { get; set; }
-        public DateTime RecordedAt { get; set; } = DateTime.UtcNow;
-        public int Id { get; set; } // This will be set by the database as an auto-incremented value
-        public HistoryEntry() { }
-        public HistoryEntry(string inputText, string outputText, string modelName, int promptTokens, int completionTokens, int totalTokens)
-        {
-            InputText = inputText;
-            OutputText = outputText;
-            ModelName = modelName;
-            PromptTokens = promptTokens;
-            CompletionTokens = completionTokens;
-            TotalTokens = totalTokens;
-            RecordedAt = DateTime.UtcNow;
-        }
-    }
+    public long Id { get; init; }
+    public DateTimeOffset RecordedAtUtc { get; init; }
+    public string QuestionText { get; init; } = string.Empty;
+    public bool HadPipedInput { get; init; }
+    public int PipedCharacterCount { get; init; }
+    public string OutputText { get; init; } = string.Empty;
+    public string ModelName { get; init; } = string.Empty;
+    public int PromptTokens { get; init; }
+    public int CompletionTokens { get; init; }
+    public int TotalTokens { get; init; }
 }

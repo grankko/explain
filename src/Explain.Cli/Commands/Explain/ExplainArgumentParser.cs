@@ -20,6 +20,12 @@ namespace Explain.Cli.Commands.Explain
             }
 
             var argsList = new List<string>(args);
+
+            if (argsList.Contains("--help") || argsList.Contains("-h"))
+            {
+                result.ShowHelp = true;
+                argsList.RemoveAll(arg => arg is "--help" or "-h");
+            }
             
             // Check for verbose flag
             if (argsList.Contains("--verbose"))
@@ -70,6 +76,30 @@ namespace Explain.Cli.Commands.Explain
             {
                 result.ClearHistory = true;
                 argsList.Remove("--clear-history");
+            }
+
+            if (argsList.Contains("--no-history"))
+            {
+                result.NoHistory = true;
+                argsList.Remove("--no-history");
+            }
+
+            if (argsList.Contains("--show-memory"))
+            {
+                result.ShowMemory = true;
+                argsList.Remove("--show-memory");
+            }
+
+            if (argsList.Contains("--clear-memory"))
+            {
+                result.ClearMemory = true;
+                argsList.Remove("--clear-memory");
+            }
+
+            if (argsList.Contains("--refresh-system"))
+            {
+                result.RefreshSystem = true;
+                argsList.Remove("--refresh-system");
             }
 
             // The remaining argument should be the question

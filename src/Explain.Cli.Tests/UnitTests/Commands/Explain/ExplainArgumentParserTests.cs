@@ -6,6 +6,32 @@ namespace Explain.Cli.Tests.UnitTests.Commands.Explain;
 public class ExplainArgumentParserTests
 {
     [TestMethod]
+    public void ParseArguments_HelpFlags_AreRemovedFromQuestion()
+    {
+        foreach (var flag in new[] { "--help", "-h" })
+        {
+            var result = ExplainArgumentParser.ParseArguments([flag]);
+
+            Assert.IsTrue(result.ShowHelp);
+            Assert.AreEqual(string.Empty, result.Question);
+        }
+    }
+
+    [TestMethod]
+    public void ParseArguments_NewContextFlags_AreRemovedFromQuestion()
+    {
+        var result = ExplainArgumentParser.ParseArguments([
+            "remember", "this", "--no-history", "--show-memory", "--clear-memory", "--refresh-system"
+        ]);
+
+        Assert.IsTrue(result.NoHistory);
+        Assert.IsTrue(result.ShowMemory);
+        Assert.IsTrue(result.ClearMemory);
+        Assert.IsTrue(result.RefreshSystem);
+        Assert.AreEqual("remember this", result.Question);
+    }
+
+    [TestMethod]
     public void ParseArguments_WithBothFlags_SetsBothTrue()
     {
         // Arrange

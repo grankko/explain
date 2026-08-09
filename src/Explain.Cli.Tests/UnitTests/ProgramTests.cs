@@ -3,6 +3,10 @@ using Microsoft.Extensions.Options;
 using Explain.Cli.AI;
 using Explain.Cli.Commands;
 using Explain.Cli.Configuration;
+using Explain.Cli.AI.Context;
+using Explain.Cli.AI.Tools;
+using Explain.Cli.Memory;
+using Explain.Cli.Storage;
 
 namespace Explain.Cli.Tests.UnitTests;
 
@@ -38,6 +42,11 @@ public class ProgramTests
         // Assert
         Assert.IsNotNull(serviceProvider.GetRequiredService<ICommand>(), "ICommand should be registered");
         Assert.IsNotNull(serviceProvider.GetRequiredService<IOpenAIServiceAgent>(), "IOpenAIServiceAgent should be registered");
+        Assert.IsNotNull(serviceProvider.GetRequiredService<IHistoryService>());
+        Assert.IsNotNull(serviceProvider.GetRequiredService<IMemoryService>());
+        Assert.IsNotNull(serviceProvider.GetRequiredService<ISystemProfileService>());
+        Assert.IsNotNull(serviceProvider.GetRequiredService<IAiContextBuilder>());
+        Assert.IsNotNull(serviceProvider.GetRequiredService<ILocalToolSessionFactory>());
         Assert.IsNotNull(serviceProvider.GetRequiredService<IConfigurationDisplayService>(), "IConfigurationDisplayService should be registered");
     }
 

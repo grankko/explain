@@ -53,7 +53,6 @@ public class ExplainInputHandlerTests
         Assert.AreEqual(string.Empty, result.PipedContent);
         Assert.AreEqual(question, result.ArgumentContent);
         Assert.AreEqual($"Question: {question}", result.ComposeForAI());
-        Assert.AreEqual(question, result.GetRawUserInput());
     }
     
     [TestMethod]
@@ -65,7 +64,6 @@ public class ExplainInputHandlerTests
         Assert.IsFalse(emptyContent.HasPipedInput);
         Assert.IsFalse(emptyContent.HasArgumentInput);
         Assert.AreEqual(string.Empty, emptyContent.ComposeForAI());
-        Assert.AreEqual(string.Empty, emptyContent.GetRawUserInput());
         
         // Test piped content only
         var pipedOnly = new ExplainInputContent { PipedContent = "console.log('hello')" };
@@ -73,7 +71,6 @@ public class ExplainInputHandlerTests
         Assert.IsTrue(pipedOnly.HasPipedInput);
         Assert.IsFalse(pipedOnly.HasArgumentInput);
         Assert.AreEqual("Piped content:\nconsole.log('hello')", pipedOnly.ComposeForAI());
-        Assert.AreEqual("console.log('hello')", pipedOnly.GetRawUserInput());
         
         // Test argument content only
         var argumentOnly = new ExplainInputContent { ArgumentContent = "explain this code" };
@@ -81,7 +78,6 @@ public class ExplainInputHandlerTests
         Assert.IsFalse(argumentOnly.HasPipedInput);
         Assert.IsTrue(argumentOnly.HasArgumentInput);
         Assert.AreEqual("Question: explain this code", argumentOnly.ComposeForAI());
-        Assert.AreEqual("explain this code", argumentOnly.GetRawUserInput());
         
         // Test both piped and argument content
         var bothContent = new ExplainInputContent 
@@ -93,6 +89,5 @@ public class ExplainInputHandlerTests
         Assert.IsTrue(bothContent.HasPipedInput);
         Assert.IsTrue(bothContent.HasArgumentInput);
         Assert.AreEqual("Piped content:\nconsole.log('hello')\n----------\nQuestion: what does this do?", bothContent.ComposeForAI());
-        Assert.AreEqual("console.log('hello')\n[Question: what does this do?]", bothContent.GetRawUserInput());
     }
 }

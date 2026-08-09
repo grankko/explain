@@ -6,6 +6,41 @@ namespace Explain.Cli.Tests.UnitTests.Commands.Explain;
 public class ExplainArgumentValidatorTests
 {
     [TestMethod]
+    public void GetValidationError_NoHistoryAndIncludeHistory_ReturnsError()
+    {
+        var result = ExplainArgumentValidator.GetValidationError(new ExplainArguments
+        {
+            NoHistory = true,
+            IncludeHistory = true
+        });
+
+        StringAssert.Contains(result, "cannot be combined");
+    }
+
+    [TestMethod]
+    public void GetValidationError_NegativeHistoryLimit_ReturnsError()
+    {
+        var result = ExplainArgumentValidator.GetValidationError(new ExplainArguments
+        {
+            IncludeHistoryLimit = -1
+        });
+
+        StringAssert.Contains(result, "cannot be negative");
+    }
+
+    [TestMethod]
+    public void GetValidationError_MultipleManagementCommands_ReturnsError()
+    {
+        var result = ExplainArgumentValidator.GetValidationError(new ExplainArguments
+        {
+            ShowMemory = true,
+            ClearHistory = true
+        });
+
+        StringAssert.Contains(result, "cannot be combined");
+    }
+
+    [TestMethod]
     public void ValidateShowHistory_WithValidShowHistoryOnly_ReturnsTrue()
     {
         // Arrange

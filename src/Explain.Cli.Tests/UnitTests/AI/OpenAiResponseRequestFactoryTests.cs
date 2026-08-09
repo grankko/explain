@@ -71,5 +71,26 @@ public class OpenAiResponseRequestFactoryTests
         Assert.IsNotNull(result.TextOptions);
         Assert.IsNotNull(result.TextOptions.TextFormat);
     }
+
+    [TestMethod]
+    public void Create_WithLocalTools_DisablesParallelCallsAndKeepsWebSearch()
+    {
+        var localTool = ResponseTool.CreateFunctionTool(
+            functionName: "test_tool",
+            functionParameters: BinaryData.FromString("""
+                {"type":"object","properties":{},"required":[],"additionalProperties":false}
+                """),
+            strictModeEnabled: true,
+            functionDescription: "Test tool");
+
+        var result = OpenAiResponseRequestFactory.Create(
+            new OpenAiOptions(),
+            InputItems,
+            false,
+            localTools: [localTool]);
+
+        Assert.AreEqual(false, result.ParallelToolCallsEnabled);
+        Assert.HasCount(2, result.Tools);
+    }
 }
 #pragma warning restore OPENAI001

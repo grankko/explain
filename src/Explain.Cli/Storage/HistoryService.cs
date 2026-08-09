@@ -1,114 +1,123 @@
-using Explain.Cli.Configuration;
+using System.Globalization;
 using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Options;
 
-namespace Explain.Cli.Storage
+namespace Explain.Cli.Storage;
+
+public sealed class HistoryService : IHistoryService
 {
+    private readonly ExplainDatabase _database;
 
-    public class HistoryService : IHistoryService
+    public HistoryService(ExplainDatabase database)
     {
-        private readonly string _connectionString;
+        _database = database;
+    }
 
-        public HistoryService(IOptions<StorageOptions> options)
+    public async Task AddAsync(HistoryEntry entry, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+        if (string.IsNullOrWhiteSpace(entry.OutputText))
+            throw new ArgumentException("Output text cannot be empty.", nameof(entry));
+        if (string.IsNullOrWhiteSpace(entry.ModelName))
+            throw new ArgumentException("Model name cannot be empty.", nameof(entry));
+        if (entry.PipedCharacterCount < 0 || entry.PromptTokens < 0 || entry.CompletionTokens < 0 || entry.TotalTokens < 0)
+            throw new ArgumentOutOfRangeException(nameof(entry), "Counts cannot be negative.");
+
+        await using var connection = await _database.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO History (
+                RecordedAtUtc, QuestionText, HadPipedInput, PipedCharacterCount,
+                OutputText, ModelName, PromptTokens, CompletionTokens, TotalTokens)
+            VALUES (
+                $recordedAtUtc, $questionText, $hadPipedInput, $pipedCharacterCount,
+                $outputText, $modelName, $promptTokens, $completionTokens, $totalTokens);
+            """;
+        command.Parameters.AddWithValue("$recordedAtUtc", entry.RecordedAtUtc.ToUniversalTime().ToString("O"));
+        command.Parameters.AddWithValue("$questionText", entry.QuestionText);
+        command.Parameters.AddWithValue("$hadPipedInput", entry.HadPipedInput ? 1 : 0);
+        command.Parameters.AddWithValue("$pipedCharacterCount", entry.PipedCharacterCount);
+        command.Parameters.AddWithValue("$outputText", entry.OutputText);
+        command.Parameters.AddWithValue("$modelName", entry.ModelName);
+        command.Parameters.AddWithValue("$promptTokens", entry.PromptTokens);
+        command.Parameters.AddWithValue("$completionTokens", entry.CompletionTokens);
+        command.Parameters.AddWithValue("$totalTokens", entry.TotalTokens);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public Task<IReadOnlyList<HistoryEntry>> GetLatestAsync(
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        if (limit < 0)
+            throw new ArgumentOutOfRangeException(nameof(limit), "History limit cannot be negative.");
+
+        return ReadAsync(null, limit, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<HistoryEntry>> GetRecentAsync(
+        DateTimeOffset cutoffUtc,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        if (limit <= 0)
+            throw new ArgumentOutOfRangeException(nameof(limit), "Recent history limit must be positive.");
+
+        return ReadAsync(cutoffUtc.ToUniversalTime(), limit, cancellationToken);
+    }
+
+    public async Task ClearAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await _database.OpenConnectionAsync(cancellationToken);
+        await using (var command = connection.CreateCommand())
         {
-            _connectionString = options.Value.ConnectionString;
-            if (string.IsNullOrEmpty(_connectionString))
-                throw new ArgumentException("Connection string cannot be null or empty.", nameof(_connectionString));
-
-            InitializeDatabase();
+            command.CommandText = "PRAGMA secure_delete=ON; DELETE FROM History;";
+            await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
-        private void InitializeDatabase()
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+        await using var vacuum = connection.CreateCommand();
+        vacuum.CommandText = "VACUUM;";
+        await vacuum.ExecuteNonQueryAsync(cancellationToken);
+    }
 
-            using var command = connection.CreateCommand();
-            command.CommandText = @"
-            CREATE TABLE IF NOT EXISTS History (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                RecordedAt TEXT NOT NULL,
-                InputText TEXT NOT NULL,
-                OutputText TEXT NOT NULL,
-                ModelName TEXT,
-                PromptTokens INTEGER,
-                CompletionTokens INTEGER,
-                TotalTokens INTEGER
-            );";
-            command.ExecuteNonQuery();
-        }
-
-        public void AddToHistory(string input, string output, string modelName, int promptTokens, int completionTokens, int totalTokens)
-        {
-            // Validate all parameters
-            if (string.IsNullOrEmpty(input)) throw new ArgumentException("Input text cannot be null or empty.", nameof(input));
-            if (string.IsNullOrEmpty(output)) throw new ArgumentException("Output text cannot be null or empty.", nameof(output));
-            if (string.IsNullOrEmpty(modelName)) throw new ArgumentException("Model name cannot be null or empty.", nameof(modelName));
-            if (promptTokens < 0) throw new ArgumentOutOfRangeException(nameof(promptTokens), "Prompt tokens cannot be negative.");
-            if (completionTokens < 0) throw new ArgumentOutOfRangeException(nameof(completionTokens), "Completion tokens cannot be negative.");
-            if (totalTokens < 0) throw new ArgumentOutOfRangeException(nameof(totalTokens), "Total tokens cannot be negative.");
-
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            using var command = connection.CreateCommand();
-            command.CommandText = @"
-            INSERT INTO History (RecordedAt, InputText, OutputText, ModelName, PromptTokens, CompletionTokens, TotalTokens)
-            VALUES ($recordedAt, $inputText, $outputText, $modelName, $promptTokens, $completionTokens, $totalTokens);";
-
-            command.Parameters.AddWithValue("$recordedAt", DateTime.Now.ToString("o"));
-            command.Parameters.AddWithValue("$inputText", input);
-            command.Parameters.AddWithValue("$outputText", output);
-            command.Parameters.AddWithValue("$modelName", modelName);
-            command.Parameters.AddWithValue("$promptTokens", promptTokens);
-            command.Parameters.AddWithValue("$completionTokens", completionTokens);
-            command.Parameters.AddWithValue("$totalTokens", totalTokens);
-
-            command.ExecuteNonQuery();
-        }
-
-        public List<HistoryEntry> GetLatestHistory(int limit = 5)
-        {
-            var history = new List<HistoryEntry>();
-
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            using var command = connection.CreateCommand();
-            command.CommandText = @"
-            SELECT Id, RecordedAt, InputText, OutputText, ModelName, PromptTokens, CompletionTokens, TotalTokens
+    private async Task<IReadOnlyList<HistoryEntry>> ReadAsync(
+        DateTimeOffset? cutoffUtc,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        var history = new List<HistoryEntry>();
+        await using var connection = await _database.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = $$"""
+            SELECT Id, RecordedAtUtc, QuestionText, HadPipedInput, PipedCharacterCount,
+                   OutputText, ModelName, PromptTokens, CompletionTokens, TotalTokens
             FROM History
-            ORDER BY RecordedAt DESC
-            LIMIT $limit;";
+            {{(cutoffUtc is null ? string.Empty : "WHERE RecordedAtUtc >= $cutoffUtc")}}
+            ORDER BY RecordedAtUtc DESC
+            {{(limit == 0 ? string.Empty : "LIMIT $limit")}};
+            """;
+        if (cutoffUtc is not null)
+            command.Parameters.AddWithValue("$cutoffUtc", cutoffUtc.Value.ToString("O"));
+        if (limit != 0)
             command.Parameters.AddWithValue("$limit", limit);
 
-            using var reader = command.ExecuteReader();
-            while (reader.Read())
-            {
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
             history.Add(new HistoryEntry
             {
-                Id = reader.GetInt32(0),
-                RecordedAt = DateTime.Parse(reader.GetString(1)),
-                InputText = reader.GetString(2),
-                OutputText = reader.GetString(3),
-                ModelName = reader.GetString(4),
-                PromptTokens = reader.GetInt32(5),
-                CompletionTokens = reader.GetInt32(6),
-                TotalTokens = reader.GetInt32(7)
+                Id = reader.GetInt64(0),
+                RecordedAtUtc = DateTimeOffset.Parse(reader.GetString(1), CultureInfo.InvariantCulture),
+                QuestionText = reader.GetString(2),
+                HadPipedInput = reader.GetBoolean(3),
+                PipedCharacterCount = reader.GetInt32(4),
+                OutputText = reader.GetString(5),
+                ModelName = reader.GetString(6),
+                PromptTokens = reader.GetInt32(7),
+                CompletionTokens = reader.GetInt32(8),
+                TotalTokens = reader.GetInt32(9)
             });
-            }
-
-            return history;
         }
 
-        public void ClearHistory()
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            using var command = connection.CreateCommand();
-            command.CommandText = "DELETE FROM History;";
-            command.ExecuteNonQuery();
-        }
+        return history;
     }
 }

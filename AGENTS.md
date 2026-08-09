@@ -9,7 +9,7 @@ This repository contains a .NET command-line application, `explain`, that uses t
 - .NET 10
 - C#
 - OpenAI .NET SDK
-- SQLite for local history
+- SQLite for local history and durable memory
 
 ## Configuration
 
@@ -22,6 +22,8 @@ The application uses layered configuration:
 
 The default and smart models are GPT-5.6 Terra. Regular requests use low reasoning effort; `--think` uses high reasoning effort. Hosted web search is available on every request and the model decides when to use it.
 
+Recent history is included automatically. Durable memory is model-managed through local function tools, with reserved system facts collected deterministically. Never persist raw piped input or expose local memory tools during `--no-history` requests.
+
 Never inspect, print, or commit real API keys. Use `src/Explain.Cli/appsettings.example.json` for documentation and placeholders.
 
 ## Common commands
@@ -33,6 +35,8 @@ dotnet run --project src/Explain.Cli -- "complex question" --think --verbose
 dotnet run --project src/Explain.Cli -- "follow-up" --include-history 5
 dotnet run --project src/Explain.Cli -- --show-history 10
 dotnet run --project src/Explain.Cli -- --clear-history
+dotnet run --project src/Explain.Cli -- --show-memory
+dotnet run --project src/Explain.Cli -- --refresh-system
 dotnet test src/Explain.sln
 ```
 

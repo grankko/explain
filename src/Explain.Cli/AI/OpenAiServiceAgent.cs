@@ -1,3 +1,4 @@
+using Explain.Cli.AI.Tools;
 using Explain.Cli.Configuration;
 using Microsoft.Extensions.Options;
 using OpenAI.Responses;
@@ -10,13 +11,11 @@ namespace Explain.Cli.AI;
 /// </summary>
 public class OpenAIServiceAgent : IOpenAIServiceAgent
 {
+    private const int MaxLocalToolCalls = 4;
     private readonly OpenAiOptions _openAiOptions;
-    private readonly ResponsesClient _responsesClient;
+    private readonly IResponsesApiClient _responsesClient;
     private bool _isVerbose;
 
-    /// <summary>
-    /// Gets or sets whether to show verbose output.
-    /// </summary>
     public bool IsVerbose
     {
         get => _isVerbose;
@@ -26,46 +25,112 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
     public OpenAIServiceAgent(IOptions<OpenAiOptions> openAiOptions)
     {
         _openAiOptions = openAiOptions.Value;
+        ValidateApiKey(_openAiOptions.ApiKey);
+        _responsesClient = new ResponsesApiClient(openAiOptions);
+    }
 
-        if (string.IsNullOrWhiteSpace(_openAiOptions.ApiKey))
+    public OpenAIServiceAgent(
+        IOptions<OpenAiOptions> openAiOptions,
+        IResponsesApiClient responsesClient)
+    {
+        _openAiOptions = openAiOptions.Value;
+        ValidateApiKey(_openAiOptions.ApiKey);
+        _responsesClient = responsesClient;
+    }
+
+    private static void ValidateApiKey(string apiKey)
+    {
+        if (string.IsNullOrWhiteSpace(apiKey))
         {
             throw new InvalidOperationException(
                 "OpenAI API key is missing. Please update your appsettings.json file with a valid API key.");
         }
-
-        _responsesClient = new ResponsesClient(_openAiOptions.ApiKey);
     }
 
-    public Task<AiResponse<string>> GetResponseAsync(IReadOnlyList<ResponseItem> messages, bool thinkDeep)
+    public Task<AiResponse<string>> GetResponseAsync(
+        IReadOnlyList<ResponseItem> messages,
+        bool thinkDeep,
+        ILocalToolSession? localToolSession = null,
+        CancellationToken cancellationToken = default)
     {
-        return GetTypedResponseAsync<string>(messages, thinkDeep, null, null);
+        return GetTypedResponseAsync<string>(
+            messages,
+            thinkDeep,
+            null,
+            null,
+            localToolSession,
+            cancellationToken);
     }
 
     public async Task<AiResponse<T>> GetTypedResponseAsync<T>(
         IReadOnlyList<ResponseItem> messages,
         bool thinkDeep,
         string? schemaName,
-        BinaryData? jsonSchema)
+        BinaryData? jsonSchema,
+        ILocalToolSession? localToolSession = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            var options = OpenAiResponseRequestFactory.Create(
-                _openAiOptions,
-                messages,
-                thinkDeep,
-                schemaName,
-                jsonSchema);
+            var inputItems = messages.ToList();
+            var localToolCalls = 0;
+            var promptTokens = 0;
+            var completionTokens = 0;
+            var totalTokens = 0;
+            var webSearchUsed = false;
 
             if (_isVerbose)
             {
                 Console.WriteLine($"Reasoning effort: {(thinkDeep ? "high" : "low")}");
                 Console.WriteLine("Web search available: yes (model decides when to use it)");
+                Console.WriteLine($"Local memory tools available: {(localToolSession is null ? "no" : "yes")}");
                 if (!string.IsNullOrWhiteSpace(schemaName) && jsonSchema is not null)
                     Console.WriteLine($"Using structured output with schema: {schemaName}");
             }
 
-            ResponseResult response = await _responsesClient.CreateResponseAsync(options);
-            return MapResponse<T>(response, schemaName, jsonSchema);
+            while (true)
+            {
+                var options = OpenAiResponseRequestFactory.Create(
+                    _openAiOptions,
+                    inputItems,
+                    thinkDeep,
+                    schemaName,
+                    jsonSchema,
+                    localToolSession?.Tools);
+
+                ResponsesApiResult response = await _responsesClient.CreateAsync(options, cancellationToken);
+                promptTokens += response.InputTokens;
+                completionTokens += response.OutputTokens;
+                totalTokens += response.TotalTokens;
+                webSearchUsed |= response.WebSearchUsed;
+                inputItems.AddRange(response.OutputItems);
+
+                var functionCalls = response.OutputItems.OfType<FunctionCallResponseItem>().ToList();
+                if (functionCalls.Count == 0)
+                {
+                    return MapResponse<T>(
+                        response,
+                        schemaName,
+                        jsonSchema,
+                        promptTokens,
+                        completionTokens,
+                        totalTokens,
+                        webSearchUsed);
+                }
+
+                if (localToolSession is null)
+                    throw new InvalidOperationException("The model requested a local tool when local tools were disabled.");
+
+                foreach (var functionCall in functionCalls)
+                {
+                    localToolCalls++;
+                    if (localToolCalls > MaxLocalToolCalls)
+                        throw new InvalidOperationException($"The response exceeded the limit of {MaxLocalToolCalls} local memory tool calls.");
+
+                    var output = await localToolSession.ExecuteAsync(functionCall, cancellationToken);
+                    inputItems.Add(new FunctionCallOutputResponseItem(functionCall.CallId, output));
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -76,20 +141,24 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
         }
     }
 
-    private AiResponse<T> MapResponse<T>(ResponseResult response, string? schemaName, BinaryData? jsonSchema)
+    private AiResponse<T> MapResponse<T>(
+        ResponsesApiResult response,
+        string? schemaName,
+        BinaryData? jsonSchema,
+        int promptTokens,
+        int completionTokens,
+        int totalTokens,
+        bool webSearchUsed)
     {
-        var rawText = response.GetOutputText();
-        var webSearchUsed = response.OutputItems.Any(item => item is WebSearchCallResponseItem);
-        var citations = ExtractCitations(response);
         var attemptedStructuredOutput = !string.IsNullOrWhiteSpace(schemaName) && jsonSchema is not null;
         var aiResult = OpenAiResponseMapper.Map<T>(
-            rawText,
+            response.Text,
             response.Model,
-            response.Usage.InputTokenCount,
-            response.Usage.OutputTokenCount,
-            response.Usage.TotalTokenCount,
+            promptTokens,
+            completionTokens,
+            totalTokens,
             webSearchUsed,
-            citations,
+            response.Citations,
             attemptedStructuredOutput);
 
         if (_isVerbose)
@@ -101,27 +170,5 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
         return aiResult;
     }
 
-    private static IEnumerable<AiCitation> ExtractCitations(ResponseResult response)
-    {
-        var textOffset = 0;
-
-        foreach (var message in response.OutputItems.OfType<MessageResponseItem>())
-        {
-            foreach (var contentPart in message.Content)
-            {
-                var partText = contentPart.Text ?? string.Empty;
-                foreach (var annotation in contentPart.OutputTextAnnotations.OfType<UriCitationMessageAnnotation>())
-                {
-                    yield return new AiCitation(
-                        annotation.Title,
-                        annotation.Uri.ToString(),
-                        textOffset + annotation.StartIndex,
-                        textOffset + annotation.EndIndex);
-                }
-
-                textOffset += partText.Length;
-            }
-        }
-    }
 }
 #pragma warning restore OPENAI001

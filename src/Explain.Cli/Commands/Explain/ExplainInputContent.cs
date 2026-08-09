@@ -63,30 +63,5 @@ namespace Explain.Cli.Commands.Explain
             }
         }
 
-        /// <summary>
-        /// Gets the raw user input suitable for history storage (without AI prompt formatting).
-        /// </summary>
-        /// <returns>Raw user input for historical records</returns>
-        public string GetRawUserInput()
-        {
-            if (IsEmpty)
-                return string.Empty;
-
-            if (HasPipedInput && HasArgumentInput)
-            {
-                // Both - combine but without AI formatting
-                return $"{PipedContent}\n[Question: {ArgumentContent}]";
-            }
-            else if (HasPipedInput)
-            {
-                // Only piped content
-                return PipedContent;
-            }
-            else
-            {
-                // Only argument content
-                return ArgumentContent;
-            }
-        }
     }
 }
