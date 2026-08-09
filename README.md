@@ -57,7 +57,7 @@ A command-line tool that uses OpenAI's GPT models to explain anything you throw 
 3. **Build and publish**:
    ```bash
    chmod +x publish.sh
-   ./publish.sh
+   ./publish.sh --bump-patch
    ```
 
 4. **Install globally** (optional):
@@ -92,7 +92,7 @@ On the first non-ephemeral invocation, Explain records a privacy-balanced system
 
 Both model settings default to `gpt-5.6-terra`. Existing installations can keep separate overrides for regular and `--think` requests, but `--think` always requests high reasoning effort while regular mode requests low reasoning effort.
 
-Web search is available automatically—there is no search flag. The model decides whether a lookup is useful, and successful searches add a `Sources:` section with terminal-clickable URLs. Web searches are billed as tool calls in addition to model token usage. A memory update requires a local function-tool round trip and may add model tokens, but no separate external service charge.
+Web search is available automatically—there is no search flag. The model decides whether a lookup is useful, and successful searches add plain numbered markers to the answer plus a terminal-friendly `Sources:` section. Raw Markdown links are converted to readable text, while full source URLs remain visible and terminal-clickable. Web searches are billed as tool calls in addition to model token usage. A memory update requires a local function-tool round trip and may add model tokens, but no separate external service charge.
 
 ## Usage
 
@@ -232,10 +232,18 @@ The project includes VS Code configuration for easy development:
 
 ### Publishing
 
-Use the included publish script for creating distributable executables:
+The root `VERSION` file is Explain's authoritative semantic version. Show the version compiled into an executable with:
 
 ```bash
-./publish.sh
+explain --version
 ```
 
-This creates a self-contained Linux executable at `publish/explain` with all dependencies included.
+Publishing requires exactly one version bump flag. Patch increments only the patch number; minor and major bumps reset the lower components to zero:
+
+```bash
+./publish.sh --bump-patch # 0.2.0 -> 0.2.1
+./publish.sh --bump-minor # 0.2.0 -> 0.3.0
+./publish.sh --bump-major # 0.2.0 -> 1.0.0
+```
+
+The script publishes the bumped version as a self-contained Linux executable at `publish/explain`, then updates `VERSION` only after publishing succeeds.

@@ -2,6 +2,7 @@
 using Explain.Cli.AI.Context;
 using Explain.Cli.AI.Tools;
 using Explain.Cli.Commands;
+using Explain.Cli.Commands.Explain;
 using Explain.Cli.Configuration;
 using Explain.Cli.Memory;
 using Explain.Cli.Storage;
@@ -18,6 +19,18 @@ public class Program
         ServiceProvider? serviceProvider = null;
         try
         {
+            var informationalArgs = ExplainArgumentParser.ParseArguments(args);
+            if (informationalArgs.ShowHelp)
+            {
+                ExplainInputHandler.ShowUsage();
+                return 0;
+            }
+            if (informationalArgs.ShowVersion)
+            {
+                Console.WriteLine($"explain {AppVersion.Current}");
+                return 0;
+            }
+
             // Build service provider
             serviceProvider = CreateServiceProvider(args);
             

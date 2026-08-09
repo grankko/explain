@@ -18,6 +18,18 @@ public class ExplainArgumentParserTests
     }
 
     [TestMethod]
+    public void ParseArguments_VersionFlags_AreRemovedFromQuestion()
+    {
+        foreach (var flag in new[] { "--version", "-V" })
+        {
+            var result = ExplainArgumentParser.ParseArguments([flag]);
+
+            Assert.IsTrue(result.ShowVersion);
+            Assert.AreEqual(string.Empty, result.Question);
+        }
+    }
+
+    [TestMethod]
     public void ParseArguments_NewContextFlags_AreRemovedFromQuestion()
     {
         var result = ExplainArgumentParser.ParseArguments([

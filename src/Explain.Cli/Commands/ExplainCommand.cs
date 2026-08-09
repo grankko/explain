@@ -6,6 +6,7 @@ using Explain.Cli.Configuration;
 using Explain.Cli.Extensions;
 using Explain.Cli.Memory;
 using Explain.Cli.Storage;
+using Explain.Cli;
 
 namespace Explain.Cli.Commands;
 
@@ -53,6 +54,11 @@ public sealed class ExplainCommand : ICommand, IDisposable
             if (parsedArgs.ShowHelp)
             {
                 ExplainInputHandler.ShowUsage();
+                return 0;
+            }
+            if (parsedArgs.ShowVersion)
+            {
+                Console.WriteLine($"explain {AppVersion.Current}");
                 return 0;
             }
 

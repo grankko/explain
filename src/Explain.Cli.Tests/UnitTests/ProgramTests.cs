@@ -14,6 +14,12 @@ namespace Explain.Cli.Tests.UnitTests;
 public class ProgramTests
 {
     [TestMethod]
+    public void AppVersion_IsSemanticVersionFromVersionFile()
+    {
+        StringAssert.Matches(AppVersion.Current, new System.Text.RegularExpressions.Regex(@"^\d+\.\d+\.\d+$"));
+    }
+
+    [TestMethod]
     public void CreateServiceProvider_ConfigurationLoaded_HasValidOpenAiOptions()
     {
         // Arrange

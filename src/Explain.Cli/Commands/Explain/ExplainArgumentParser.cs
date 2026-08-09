@@ -26,6 +26,12 @@ namespace Explain.Cli.Commands.Explain
                 result.ShowHelp = true;
                 argsList.RemoveAll(arg => arg is "--help" or "-h");
             }
+
+            if (argsList.Contains("--version") || argsList.Contains("-V"))
+            {
+                result.ShowVersion = true;
+                argsList.RemoveAll(arg => arg is "--version" or "-V");
+            }
             
             // Check for verbose flag
             if (argsList.Contains("--verbose"))

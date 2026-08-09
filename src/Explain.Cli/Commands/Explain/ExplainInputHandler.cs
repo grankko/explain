@@ -104,6 +104,7 @@ namespace Explain.Cli.Commands.Explain
             Console.WriteLine("  explain --clear-memory");
             Console.WriteLine("  explain --refresh-system [\"optional question\"]");
             Console.WriteLine("  explain --help");
+            Console.WriteLine("  explain --version");
             Console.WriteLine();
 
             Console.Out.WriteInfo("Options:");
@@ -117,6 +118,7 @@ namespace Explain.Cli.Commands.Explain
             Console.WriteLine("  --clear-memory     Clear AI-created memories while retaining system facts");
             Console.WriteLine("  --refresh-system   Refresh the local privacy-balanced system profile");
             Console.WriteLine("  -h, --help         Show this help without making an AI request");
+            Console.WriteLine("  -V, --version      Show the installed Explain version");
             Console.WriteLine();
 
             Console.Out.WriteInfo("Input limits:");

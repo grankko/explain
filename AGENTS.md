@@ -48,4 +48,4 @@ dotnet test src/Explain.sln
 - Prefer a small number of meaningful tests. Keep unit and integration tests in their existing namespaces.
 - Integration tests must remain opt-in so ordinary agent runs cannot make paid API calls or hang.
 - Use the latest stable dependencies and do not downgrade packages to bypass a problem.
-- Use `publish.sh` to build the standalone Linux executable. Ask before starting an unrelated major refactor.
+- Use `publish.sh` with exactly one of `--bump-patch`, `--bump-minor`, or `--bump-major` to create the standalone Linux executable and update `VERSION`. Ask before starting an unrelated major refactor.

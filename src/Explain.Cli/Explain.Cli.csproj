@@ -5,6 +5,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <VersionFile>$(MSBuildProjectDirectory)/../../VERSION</VersionFile>
+    <Version Condition="Exists('$(VersionFile)')">$([System.IO.File]::ReadAllText('$(VersionFile)').Trim())</Version>
   </PropertyGroup>
 
   <ItemGroup>

@@ -18,5 +18,6 @@ namespace Explain.Cli.Commands.Explain
         public bool ClearMemory { get; set; }
         public bool RefreshSystem { get; set; }
         public bool ShowHelp { get; set; }
+        public bool ShowVersion { get; set; }
     }
 }

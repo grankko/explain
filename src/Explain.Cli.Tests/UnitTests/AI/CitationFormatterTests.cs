@@ -16,7 +16,7 @@ public class CitationFormatterTests
             ]);
 
         Assert.AreEqual(
-            "Alpha[1] and beta[2].\n\nSources:\n[1] Alpha source - https://example.com/alpha\n[2] Beta source - https://example.com/beta",
+            "Alpha[1] and beta[2].\n\nSources:\n[1] Alpha source\n    https://example.com/alpha\n[2] Beta source\n    https://example.com/beta",
             result.Text.ReplaceLineEndings("\n"));
         Assert.HasCount(2, result.Sources);
     }
@@ -64,5 +64,33 @@ public class CitationFormatterTests
 
         Assert.AreEqual("No search needed.", result.Text);
         Assert.IsEmpty(result.Sources);
+    }
+
+    [TestMethod]
+    public void Format_AnnotatedMarkdownLink_ReplacesLinkWithTerminalMarker()
+    {
+        const string url = "https://www.svtplay.se/kanaler/svt2";
+        const string citation = "[svtplay.se](https://www.svtplay.se/kanaler/svt2)";
+        var text = $"The programme starts at 21:00. ({citation})";
+        var start = text.IndexOf(citation, StringComparison.Ordinal);
+
+        var result = CitationFormatter.Format(
+            text,
+            [new AiCitation("SVT 2 | SVT Play", url, start, start + citation.Length)]);
+
+        Assert.AreEqual(
+            "The programme starts at 21:00.[1]\n\nSources:\n[1] SVT 2 | SVT Play\n    https://www.svtplay.se/kanaler/svt2",
+            result.Text.ReplaceLineEndings("\n"));
+        Assert.DoesNotContain("[svtplay.se](", result.Text);
+    }
+
+    [TestMethod]
+    public void Format_UnannotatedMarkdownLink_UsesReadablePlainText()
+    {
+        var result = CitationFormatter.Format(
+            "See [OpenAI](https://openai.com) for details.",
+            []);
+
+        Assert.AreEqual("See OpenAI (https://openai.com) for details.", result.Text);
     }
 }
