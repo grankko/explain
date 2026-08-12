@@ -17,12 +17,13 @@ namespace Explain.Cli.Configuration
         {
             Console.WriteLine("=== Configuration Test ===");
             Console.WriteLine($"API Key: {(!string.IsNullOrEmpty(_openAiOptions.ApiKey) ? "***CONFIGURED***" : "NOT SET")}");
-            Console.WriteLine($"Model Name: {_openAiOptions.ModelName}");
-            Console.WriteLine($"Smart Model Name: {_openAiOptions.SmartModelName}");
+            Console.WriteLine($"Default Model Name: {_openAiOptions.DefaultModelName}");
+            Console.WriteLine($"Default Reasoning Effort: {_openAiOptions.DefaultReasoningEffort}");
             Console.WriteLine($"Organization: {_openAiOptions.Organization ?? "Not set"}");
             Console.WriteLine("=== Storage Configuration ===");
             Console.WriteLine($"Connection String: {(string.IsNullOrEmpty(_storageOptions.ConnectionString) ? "NOT SET" : "***CONFIGURED***")}");
             Console.WriteLine("===========================");
         }
+
     }
 }

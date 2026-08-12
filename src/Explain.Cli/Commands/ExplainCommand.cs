@@ -7,6 +7,7 @@ using Explain.Cli.Extensions;
 using Explain.Cli.Memory;
 using Explain.Cli.Storage;
 using Explain.Cli;
+using Microsoft.Extensions.Options;
 
 namespace Explain.Cli.Commands;
 
@@ -22,6 +23,7 @@ public sealed class ExplainCommand : ICommand, IDisposable
     private readonly IAiContextBuilder _contextBuilder;
     private readonly ILocalToolSessionFactory _toolSessionFactory;
     private readonly IConfigurationDisplayService _configurationDisplayService;
+    private readonly OpenAiOptions _openAiOptions;
     private readonly TimeProvider _timeProvider;
     private readonly CancellationTokenSource _animationCts = new();
     private bool _disposed;
@@ -34,6 +36,7 @@ public sealed class ExplainCommand : ICommand, IDisposable
         IAiContextBuilder contextBuilder,
         ILocalToolSessionFactory toolSessionFactory,
         IConfigurationDisplayService configurationDisplayService,
+        IOptions<OpenAiOptions> openAiOptions,
         TimeProvider timeProvider)
     {
         _openAiServiceAgent = openAiServiceAgent;
@@ -43,6 +46,7 @@ public sealed class ExplainCommand : ICommand, IDisposable
         _contextBuilder = contextBuilder;
         _toolSessionFactory = toolSessionFactory;
         _configurationDisplayService = configurationDisplayService;
+        _openAiOptions = openAiOptions.Value;
         _timeProvider = timeProvider;
     }
 
@@ -209,14 +213,17 @@ public sealed class ExplainCommand : ICommand, IDisposable
         ExplainArguments parsedArgs,
         ILocalToolSession? toolSession)
     {
-        var label = parsedArgs.ThinkDeep ? "thinking deeply.." : "thinking..";
+        var request = OpenAiRequestSettingsFactory.Create(
+            _openAiOptions,
+            parsedArgs);
+        var label = request.ReasoningEffort is null ? "thinking.." : "thinking with reasoning..";
         var animationTask = Console.Out.ShowThinkingAnimationAsync(_animationCts.Token, label);
 
         try
         {
             return await _openAiServiceAgent.GetResponseAsync(
                 context.Items,
-                parsedArgs.ThinkDeep,
+                request,
                 toolSession);
         }
         finally
@@ -277,8 +284,10 @@ public sealed class ExplainCommand : ICommand, IDisposable
     private void ShowVerboseInformation(ExplainInputContent inputContent, ExplainArguments parsedArgs)
     {
         Console.WriteLine("Verbose mode enabled.");
-        if (parsedArgs.ThinkDeep)
-            Console.WriteLine("Think deep mode enabled.");
+        if (!string.IsNullOrWhiteSpace(parsedArgs.ModelName))
+            Console.WriteLine($"Model override: {parsedArgs.ModelName}");
+        if (!string.IsNullOrWhiteSpace(parsedArgs.ReasoningEffort))
+            Console.WriteLine($"Reasoning override: {parsedArgs.ReasoningEffort}");
         if (parsedArgs.NoHistory)
             Console.WriteLine("Ephemeral mode enabled: stored history and memory are disabled.");
 

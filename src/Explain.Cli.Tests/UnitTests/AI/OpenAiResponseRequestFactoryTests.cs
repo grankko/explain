@@ -1,5 +1,4 @@
 using Explain.Cli.AI;
-using Explain.Cli.Configuration;
 using OpenAI.Responses;
 
 namespace Explain.Cli.Tests.UnitTests.AI;
@@ -15,18 +14,14 @@ public class OpenAiResponseRequestFactoryTests
     ];
 
     [TestMethod]
-    public void Create_RegularMode_UsesRegularModelLowReasoningAndWebSearch()
+    public void Create_UsesSelectedModelAndReasoningAndWebSearch()
     {
-        var settings = new OpenAiOptions
-        {
-            ModelName = "regular-model",
-            SmartModelName = "smart-model"
-        };
+        var request = new OpenAiRequestSettings("selected-model", ResponseReasoningEffortLevel.Medium);
 
-        var result = OpenAiResponseRequestFactory.Create(settings, InputItems, false);
+        var result = OpenAiResponseRequestFactory.Create(InputItems, request);
 
-        Assert.AreEqual("regular-model", result.Model);
-        Assert.AreEqual(ResponseReasoningEffortLevel.Low, result.ReasoningOptions?.ReasoningEffortLevel);
+        Assert.AreEqual("selected-model", result.Model);
+        Assert.AreEqual(ResponseReasoningEffortLevel.Medium, result.ReasoningOptions?.ReasoningEffortLevel);
         Assert.AreEqual(false, result.StoredOutputEnabled);
         Assert.HasCount(1, result.Tools);
         Assert.HasCount(2, result.InputItems);
@@ -34,18 +29,14 @@ public class OpenAiResponseRequestFactoryTests
     }
 
     [TestMethod]
-    public void Create_ThinkMode_UsesSmartModelAndHighReasoning()
+    public void Create_WithNoReasoning_OmitsReasoningOptions()
     {
-        var settings = new OpenAiOptions
-        {
-            ModelName = "regular-model",
-            SmartModelName = "smart-model"
-        };
+        var request = new OpenAiRequestSettings("non-reasoning-model", null);
 
-        var result = OpenAiResponseRequestFactory.Create(settings, InputItems, true);
+        var result = OpenAiResponseRequestFactory.Create(InputItems, request);
 
-        Assert.AreEqual("smart-model", result.Model);
-        Assert.AreEqual(ResponseReasoningEffortLevel.High, result.ReasoningOptions?.ReasoningEffortLevel);
+        Assert.AreEqual("non-reasoning-model", result.Model);
+        Assert.IsNull(result.ReasoningOptions);
         Assert.HasCount(1, result.Tools);
     }
 
@@ -62,9 +53,8 @@ public class OpenAiResponseRequestFactoryTests
             """);
 
         var result = OpenAiResponseRequestFactory.Create(
-            new OpenAiOptions(),
             InputItems,
-            false,
+            new OpenAiRequestSettings("gpt-5.6-terra", ResponseReasoningEffortLevel.Medium),
             "answer_response",
             schema);
 
@@ -84,9 +74,8 @@ public class OpenAiResponseRequestFactoryTests
             functionDescription: "Test tool");
 
         var result = OpenAiResponseRequestFactory.Create(
-            new OpenAiOptions(),
             InputItems,
-            false,
+            new OpenAiRequestSettings("gpt-5.6-terra", ResponseReasoningEffortLevel.Medium),
             localTools: [localTool]);
 
         Assert.AreEqual(false, result.ParallelToolCallsEnabled);

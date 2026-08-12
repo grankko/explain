@@ -1,4 +1,3 @@
-using Explain.Cli.Configuration;
 using OpenAI.Responses;
 
 namespace Explain.Cli.AI;
@@ -7,27 +6,28 @@ namespace Explain.Cli.AI;
 public static class OpenAiResponseRequestFactory
 {
     public static CreateResponseOptions Create(
-        OpenAiOptions settings,
         IEnumerable<ResponseItem> inputItems,
-        bool thinkDeep,
+        OpenAiRequestSettings request,
         string? schemaName = null,
         BinaryData? jsonSchema = null,
         IEnumerable<ResponseTool>? localTools = null)
     {
-        ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(inputItems);
+        ArgumentNullException.ThrowIfNull(request);
 
         var options = new CreateResponseOptions
         {
-            Model = thinkDeep ? settings.SmartModelName : settings.ModelName,
-            StoredOutputEnabled = false,
-            ReasoningOptions = new ResponseReasoningOptions
-            {
-                ReasoningEffortLevel = thinkDeep
-                    ? ResponseReasoningEffortLevel.High
-                    : ResponseReasoningEffortLevel.Low
-            }
+            Model = request.ModelName,
+            StoredOutputEnabled = false
         };
+
+        if (request.ReasoningEffort is not null)
+        {
+            options.ReasoningOptions = new ResponseReasoningOptions
+            {
+                ReasoningEffortLevel = request.ReasoningEffort.Value
+            };
+        }
 
         options.Tools.Add(ResponseTool.CreateWebSearchTool());
         if (localTools is not null)

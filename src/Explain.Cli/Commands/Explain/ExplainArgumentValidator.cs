@@ -7,6 +7,8 @@ public static class ExplainArgumentValidator
 {
     public static string? GetValidationError(ExplainArguments parsedArgs)
     {
+        if (!string.IsNullOrWhiteSpace(parsedArgs.ArgumentError))
+            return parsedArgs.ArgumentError;
         if (parsedArgs.HistoryLimit < 0 || parsedArgs.IncludeHistoryLimit < 0)
             return "History limits cannot be negative.";
         if (parsedArgs.NoHistory && parsedArgs.IncludeHistory)
@@ -25,7 +27,8 @@ public static class ExplainArgumentValidator
             return "History and memory management commands cannot be combined.";
 
         if (managementCommandCount == 1 &&
-            (!string.IsNullOrWhiteSpace(parsedArgs.Question) || parsedArgs.ThinkDeep ||
+            (!string.IsNullOrWhiteSpace(parsedArgs.Question) || !string.IsNullOrWhiteSpace(parsedArgs.ModelName) ||
+             !string.IsNullOrWhiteSpace(parsedArgs.ReasoningEffort) ||
              parsedArgs.IncludeHistory || parsedArgs.NoHistory || parsedArgs.RefreshSystem))
         {
             return "History and memory management commands cannot be combined with a question or response options.";
@@ -44,7 +47,8 @@ public static class ExplainArgumentValidator
         if (!parsedArgs.ShowHistory) return true;
         
         return string.IsNullOrWhiteSpace(parsedArgs.Question) && 
-               !parsedArgs.ThinkDeep && 
+               string.IsNullOrWhiteSpace(parsedArgs.ModelName) &&
+               string.IsNullOrWhiteSpace(parsedArgs.ReasoningEffort) &&
                !parsedArgs.ClearHistory &&
                !parsedArgs.ShowMemory &&
                !parsedArgs.ClearMemory;
@@ -60,7 +64,8 @@ public static class ExplainArgumentValidator
         if (!parsedArgs.ClearHistory) return true;
         
         return string.IsNullOrWhiteSpace(parsedArgs.Question) && 
-               !parsedArgs.ThinkDeep && 
+               string.IsNullOrWhiteSpace(parsedArgs.ModelName) &&
+               string.IsNullOrWhiteSpace(parsedArgs.ReasoningEffort) &&
                !parsedArgs.ShowHistory &&
                !parsedArgs.ShowMemory &&
                !parsedArgs.ClearMemory;

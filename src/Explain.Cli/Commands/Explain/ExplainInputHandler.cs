@@ -9,8 +9,7 @@ namespace Explain.Cli.Commands.Explain
     public static class ExplainInputHandler
     {
         // Token limits for safety (leaving room for system prompt + response)
-        private const int MAX_INPUT_TOKENS_REGULAR = 100_000; // ~400KB text
-        private const int MAX_INPUT_TOKENS_SMART = 100_000;
+        private const int MaxInputTokens = 100_000; // ~400KB text
         private const int CHARS_PER_TOKEN = 4; // Rough estimate
 
         /// <summary>
@@ -48,7 +47,7 @@ namespace Explain.Cli.Commands.Explain
 
             // Validate input length if we have content
             if (!result.IsEmpty)
-                ValidateInputLength(result.ComposeForAI(), args.ThinkDeep, args.IsVerbose);
+                ValidateInputLength(result.ComposeForAI(), args.IsVerbose);
 
             return result;
         }
@@ -57,30 +56,25 @@ namespace Explain.Cli.Commands.Explain
         /// Validates that the input content doesn't exceed token limits for the selected model.
         /// </summary>
         /// <param name="content">The content to validate</param>
-        /// <param name="thinkDeep">Whether smart/deep thinking mode is enabled</param>
         /// <param name="isVerbose">Whether verbose output is enabled</param>
         /// <exception cref="InvalidOperationException">Thrown when input exceeds token limits</exception>
-        private static void ValidateInputLength(string content, bool thinkDeep, bool isVerbose)
+        private static void ValidateInputLength(string content, bool isVerbose)
         {
             var contentLength = content.Length;
-            var maxTokens = thinkDeep ? MAX_INPUT_TOKENS_SMART : MAX_INPUT_TOKENS_REGULAR;
-            var maxChars = maxTokens * CHARS_PER_TOKEN;
+            var maxChars = MaxInputTokens * CHARS_PER_TOKEN;
 
             if (contentLength > maxChars)
             {
                 var actualTokensEstimate = contentLength / CHARS_PER_TOKEN;
-                var modelType = thinkDeep ? "smart mode" : "regular mode";
-                
                 throw new InvalidOperationException(
-                    $"Input too large: ~{actualTokensEstimate:N0} tokens (max: {maxTokens:N0} for {modelType}). " +
+                    $"Input too large: ~{actualTokensEstimate:N0} tokens (max: {MaxInputTokens:N0}). " +
                     $"Consider reducing input size or splitting into smaller chunks.");
             }
 
             if (isVerbose)
             {
                 var estimatedTokens = contentLength / CHARS_PER_TOKEN;
-                var modelType = thinkDeep ? "smart mode" : "regular mode";
-                Console.WriteLine($"Estimated input tokens: ~{estimatedTokens:N0} (limit: {maxTokens:N0} for {modelType})");
+                Console.WriteLine($"Estimated input tokens: ~{estimatedTokens:N0} (limit: {MaxInputTokens:N0})");
             }
         }
 
@@ -96,8 +90,8 @@ namespace Explain.Cli.Commands.Explain
             Console.WriteLine();
 
             Console.Out.WriteInfo("Usage:");
-            Console.WriteLine("  explain \"your question here\" [--verbose] [--think]");
-            Console.WriteLine("  cat file.txt | explain [\"specific question about the content\"] [--verbose] [--think]");
+            Console.WriteLine("  explain \"your question here\" [--model name] [--reasoning effort] [--verbose]");
+            Console.WriteLine("  cat file.txt | explain [\"specific question about the content\"] [--model name] [--reasoning effort] [--verbose]");
             Console.WriteLine("  explain --show-history [number]");
             Console.WriteLine("  explain --clear-history");
             Console.WriteLine("  explain --show-memory");
@@ -108,22 +102,34 @@ namespace Explain.Cli.Commands.Explain
             Console.WriteLine();
 
             Console.Out.WriteInfo("Options:");
-            Console.WriteLine("  --verbose          Show detailed configuration and processing information");
-            Console.WriteLine("  --think            Use advanced reasoning with smart models");
-            Console.WriteLine("  --include-history [n] Override automatic recent history with the last n entries (default: 3)");
-            Console.WriteLine("  --no-history       Ephemeral request: do not load or save history or memory");
-            Console.WriteLine("  --show-history [n] Show last n history entries (default: 5, cannot be combined with other input)");
-            Console.WriteLine("  --clear-history    Clear all history (requires confirmation, cannot be combined with other input)");
-            Console.WriteLine("  --show-memory      Show system, global, and project memories");
-            Console.WriteLine("  --clear-memory     Clear AI-created memories while retaining system facts");
-            Console.WriteLine("  --refresh-system   Refresh the local privacy-balanced system profile");
-            Console.WriteLine("  -h, --help         Show this help without making an AI request");
-            Console.WriteLine("  -V, --version      Show the installed Explain version");
+            WriteOption("--verbose", "Show detailed configuration and processing information");
+            WriteOption("--model name", "Use this OpenAI model for this request");
+            WriteOption("--reasoning effort", "Use none, minimal, low, medium, high, or xhigh for this request");
+            WriteOption("--include-history [n]", "Override automatic recent history with the last n entries (default: 3)");
+            WriteOption("--no-history", "Ephemeral request: do not load or save history or memory");
+            WriteOption("--show-history [n]", "Show last n history entries (default: 5, cannot be combined with other input)");
+            WriteOption("--clear-history", "Clear all history (requires confirmation, cannot be combined with other input)");
+            WriteOption("--show-memory", "Show system, global, and project memories");
+            WriteOption("--clear-memory", "Clear AI-created memories while retaining system facts");
+            WriteOption("--refresh-system", "Re-collect the local OS, kernel, architecture, shell, and time zone.");
+            WriteOptionContinuation("It updates only reserved local system facts; no hostname, username, network details,");
+            WriteOptionContinuation("environment values, or hardware identifiers are collected. It does not make an AI request.");
+            WriteOption("-h, --help", "Show this help without making an AI request");
+            WriteOption("-V, --version", "Show the installed Explain version");
             Console.WriteLine();
 
             Console.Out.WriteInfo("Input limits:");
-            Console.WriteLine($"  Regular mode: ~{MAX_INPUT_TOKENS_REGULAR:N0} tokens (~{MAX_INPUT_TOKENS_REGULAR * CHARS_PER_TOKEN / 1024:N0}KB)");
-            Console.WriteLine($"  Smart mode:   ~{MAX_INPUT_TOKENS_SMART:N0} tokens (~{MAX_INPUT_TOKENS_SMART * CHARS_PER_TOKEN / 1024:N0}KB)");
+            Console.WriteLine($"  All models: ~{MaxInputTokens:N0} tokens (~{MaxInputTokens * CHARS_PER_TOKEN / 1024:N0}KB)");
+        }
+
+        private static void WriteOption(string option, string description)
+        {
+            Console.WriteLine($"  {option,-22} {description}");
+        }
+
+        private static void WriteOptionContinuation(string description)
+        {
+            Console.WriteLine($"  {string.Empty,-22} {description}");
         }
 
         /// <summary>

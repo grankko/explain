@@ -7,7 +7,9 @@ namespace Explain.Cli.Commands.Explain
     {
         public string Question { get; set; } = string.Empty;
         public bool IsVerbose { get; set; } = false;
-        public bool ThinkDeep { get; set; } = false;
+        public string? ModelName { get; set; }
+        public string? ReasoningEffort { get; set; }
+        public string? ArgumentError { get; set; }
         public bool ShowHistory { get; set; } = false;
         public int HistoryLimit { get; set; } = 5;
         public bool ClearHistory { get; set; } = false;

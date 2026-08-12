@@ -18,11 +18,11 @@ public interface IOpenAIServiceAgent
     /// Gets a response from OpenAI.
     /// </summary>
     /// <param name="messages">The chat messages to send</param>
-    /// <param name="thinkDeep">Whether to use a more complex model for deeper thinking</param>
+    /// <param name="request">The selected model and reasoning effort.</param>
     /// <returns>The generated response</returns>
     Task<AiResponse<string>> GetResponseAsync(
         IReadOnlyList<ResponseItem> messages,
-        bool thinkDeep,
+        OpenAiRequestSettings request,
         ILocalToolSession? localToolSession = null,
         CancellationToken cancellationToken = default);
 
@@ -30,13 +30,13 @@ public interface IOpenAIServiceAgent
     /// Gets a response from OpenAI with optional structured output.
     /// </summary>
     /// <param name="messages">The chat messages to send</param>
-    /// <param name="thinkDeep">Whether to use a more complex model for deeper thinking</param>
+    /// <param name="request">The selected model and reasoning effort.</param>
     /// <param name="schemaName">Optional schema name for structured output</param>
     /// <param name="jsonSchema">Optional JSON schema for structured output</param>
     /// <returns>The generated response</returns>
     Task<AiResponse<T>> GetTypedResponseAsync<T>(
         IReadOnlyList<ResponseItem> messages,
-        bool thinkDeep,
+        OpenAiRequestSettings request,
         string? schemaName,
         BinaryData? jsonSchema,
         ILocalToolSession? localToolSession = null,

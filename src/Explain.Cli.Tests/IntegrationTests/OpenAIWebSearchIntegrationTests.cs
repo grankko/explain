@@ -31,7 +31,9 @@ public class OpenAIWebSearchIntegrationTests
                 "What is one current positive technology news headline from today?")
         };
 
-        var result = await agent.GetResponseAsync(messages, false);
+        var result = await agent.GetResponseAsync(
+            messages,
+            new OpenAiRequestSettings("gpt-5.6-terra", ResponseReasoningEffortLevel.Medium));
 
         StringAssert.StartsWith(result.ModelName, "gpt-5.6-terra");
         Assert.IsTrue(result.WebSearchUsed);

@@ -47,14 +47,14 @@ public class ExplainArgumentParserTests
     public void ParseArguments_WithBothFlags_SetsBothTrue()
     {
         // Arrange
-        var args = new[] { "question", "--verbose", "--think" };
+        var args = new[] { "question", "--verbose", "--reasoning", "high" };
         
         // Act
         var result = ExplainArgumentParser.ParseArguments(args);
         
         // Assert
         Assert.IsTrue(result.IsVerbose);
-        Assert.IsTrue(result.ThinkDeep);
+        Assert.AreEqual("high", result.ReasoningEffort);
         Assert.AreEqual("question", result.Question);
     }
 
@@ -62,7 +62,7 @@ public class ExplainArgumentParserTests
     public void ParseArguments_FlagsInDifferentOrder_ParsesCorrectly()
     {
         // Arrange
-        var args = new[] { "--think", "question", "here", "--verbose" };
+        var args = new[] { "--reasoning", "high", "question", "here", "--verbose" };
         
         // Act
         var result = ExplainArgumentParser.ParseArguments(args);
@@ -70,7 +70,27 @@ public class ExplainArgumentParserTests
         // Assert
         Assert.AreEqual("question here", result.Question);
         Assert.IsTrue(result.IsVerbose);
-        Assert.IsTrue(result.ThinkDeep);
+        Assert.AreEqual("high", result.ReasoningEffort);
+    }
+
+    [TestMethod]
+    public void ParseArguments_ModelAndReasoningOverrides_AreRemovedFromQuestion()
+    {
+        var result = ExplainArgumentParser.ParseArguments([
+            "--model", "gpt-5.6-terra", "Explain", "this", "--reasoning", "medium"
+        ]);
+
+        Assert.AreEqual("gpt-5.6-terra", result.ModelName);
+        Assert.AreEqual("medium", result.ReasoningEffort);
+        Assert.AreEqual("Explain this", result.Question);
+    }
+
+    [TestMethod]
+    public void ParseArguments_ThinkFlag_ExplainsReplacement()
+    {
+        var result = ExplainArgumentParser.ParseArguments(["question", "--think"]);
+
+        StringAssert.Contains(result.ArgumentError, "--reasoning");
     }
 
     [TestMethod]
@@ -180,7 +200,7 @@ public class ExplainArgumentParserTests
     public void ParseArguments_WithShowHistoryAndOtherFlags_SetsAllFlags()
     {
         // Arrange
-        var args = new[] { "--show-history", "15", "--verbose", "--think" };
+        var args = new[] { "--show-history", "15", "--verbose", "--reasoning", "high" };
         
         // Act
         var result = ExplainArgumentParser.ParseArguments(args);
@@ -189,7 +209,7 @@ public class ExplainArgumentParserTests
         Assert.IsTrue(result.ShowHistory);
         Assert.AreEqual(15, result.HistoryLimit);
         Assert.IsTrue(result.IsVerbose);
-        Assert.IsTrue(result.ThinkDeep);
+        Assert.AreEqual("high", result.ReasoningEffort);
         Assert.AreEqual(string.Empty, result.Question);
     }
 
@@ -197,7 +217,7 @@ public class ExplainArgumentParserTests
     public void ParseArguments_WithShowHistoryInMiddle_ParsesCorrectly()
     {
         // Arrange
-        var args = new[] { "--verbose", "--show-history", "3", "--think", "some", "question" };
+        var args = new[] { "--verbose", "--show-history", "3", "--reasoning", "high", "some", "question" };
         
         // Act
         var result = ExplainArgumentParser.ParseArguments(args);
@@ -206,7 +226,7 @@ public class ExplainArgumentParserTests
         Assert.IsTrue(result.ShowHistory);
         Assert.AreEqual(3, result.HistoryLimit);
         Assert.IsTrue(result.IsVerbose);
-        Assert.IsTrue(result.ThinkDeep);
+        Assert.AreEqual("high", result.ReasoningEffort);
         Assert.AreEqual("some question", result.Question);
     }
 
@@ -240,7 +260,7 @@ public class ExplainArgumentParserTests
         Assert.IsFalse(result.IncludeHistory);
         Assert.AreEqual(3, result.IncludeHistoryLimit); // Default value even when not using --include-history
         Assert.IsFalse(result.IsVerbose);
-        Assert.IsFalse(result.ThinkDeep);
+        Assert.IsNull(result.ReasoningEffort);
         Assert.AreEqual("simple question", result.Question);
     }
 
@@ -259,7 +279,7 @@ public class ExplainArgumentParserTests
         Assert.IsFalse(result.IncludeHistory);
         Assert.AreEqual(3, result.IncludeHistoryLimit);
         Assert.IsFalse(result.IsVerbose);
-        Assert.IsFalse(result.ThinkDeep);
+        Assert.IsNull(result.ReasoningEffort);
         Assert.AreEqual(string.Empty, result.Question);
     }
 
@@ -278,7 +298,7 @@ public class ExplainArgumentParserTests
         Assert.IsFalse(result.IncludeHistory);
         Assert.AreEqual(3, result.IncludeHistoryLimit);
         Assert.IsFalse(result.IsVerbose);
-        Assert.IsFalse(result.ThinkDeep);
+        Assert.IsNull(result.ReasoningEffort);
         Assert.AreEqual(string.Empty, result.Question);
     }
 
@@ -301,7 +321,7 @@ public class ExplainArgumentParserTests
     public void ParseArguments_WithClearHistoryAndOtherFlags_SetsAllFlags()
     {
         // Arrange
-        var args = new[] { "--clear-history", "--verbose", "--think" };
+        var args = new[] { "--clear-history", "--verbose", "--reasoning", "high" };
         
         // Act
         var result = ExplainArgumentParser.ParseArguments(args);
@@ -309,7 +329,7 @@ public class ExplainArgumentParserTests
         // Assert
         Assert.IsTrue(result.ClearHistory);
         Assert.IsTrue(result.IsVerbose);
-        Assert.IsTrue(result.ThinkDeep);
+        Assert.AreEqual("high", result.ReasoningEffort);
         Assert.AreEqual(string.Empty, result.Question);
     }
 
@@ -317,7 +337,7 @@ public class ExplainArgumentParserTests
     public void ParseArguments_WithClearHistoryInMiddle_ParsesCorrectly()
     {
         // Arrange
-        var args = new[] { "--verbose", "--clear-history", "--think", "some", "question" };
+        var args = new[] { "--verbose", "--clear-history", "--reasoning", "high", "some", "question" };
         
         // Act
         var result = ExplainArgumentParser.ParseArguments(args);
@@ -325,7 +345,7 @@ public class ExplainArgumentParserTests
         // Assert
         Assert.IsTrue(result.ClearHistory);
         Assert.IsTrue(result.IsVerbose);
-        Assert.IsTrue(result.ThinkDeep);
+        Assert.AreEqual("high", result.ReasoningEffort);
         Assert.AreEqual("some question", result.Question);
     }
 
@@ -452,7 +472,7 @@ public class ExplainArgumentParserTests
     public void ParseArguments_WithIncludeHistoryAndOtherFlags_SetsAllFlags()
     {
         // Arrange
-        var args = new[] { "--include-history", "7", "--verbose", "--think" };
+        var args = new[] { "--include-history", "7", "--verbose", "--reasoning", "high" };
         
         // Act
         var result = ExplainArgumentParser.ParseArguments(args);
@@ -461,7 +481,7 @@ public class ExplainArgumentParserTests
         Assert.IsTrue(result.IncludeHistory);
         Assert.AreEqual(7, result.IncludeHistoryLimit);
         Assert.IsTrue(result.IsVerbose);
-        Assert.IsTrue(result.ThinkDeep);
+        Assert.AreEqual("high", result.ReasoningEffort);
         Assert.AreEqual(string.Empty, result.Question);
     }
 

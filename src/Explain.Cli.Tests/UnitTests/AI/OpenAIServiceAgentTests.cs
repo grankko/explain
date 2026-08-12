@@ -21,11 +21,11 @@ public class OpenAIServiceAgentTests
     }
 
     [TestMethod]
-    public void OpenAiOptions_DefaultToGpt56Terra()
+    public void OpenAiOptions_DefaultToGpt56TerraWithMediumReasoning()
     {
         var options = new OpenAiOptions();
 
-        Assert.AreEqual("gpt-5.6-terra", options.ModelName);
-        Assert.AreEqual("gpt-5.6-terra", options.SmartModelName);
+        Assert.AreEqual("gpt-5.6-terra", options.DefaultModelName);
+        Assert.AreEqual("medium", options.DefaultReasoningEffort);
     }
 }

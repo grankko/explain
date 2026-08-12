@@ -48,7 +48,6 @@ public class ExplainArgumentValidatorTests
         {
             ShowHistory = true,
             Question = "",
-            ThinkDeep = false,
             ClearHistory = false
         };
 
@@ -67,7 +66,6 @@ public class ExplainArgumentValidatorTests
         {
             ShowHistory = true,
             Question = "What is this?",
-            ThinkDeep = false,
             ClearHistory = false
         };
 
@@ -86,7 +84,6 @@ public class ExplainArgumentValidatorTests
         {
             ClearHistory = true,
             Question = "",
-            ThinkDeep = false,
             ShowHistory = false
         };
 
@@ -105,7 +102,6 @@ public class ExplainArgumentValidatorTests
         {
             ClearHistory = true,
             Question = "",
-            ThinkDeep = false,
             ShowHistory = true
         };
 

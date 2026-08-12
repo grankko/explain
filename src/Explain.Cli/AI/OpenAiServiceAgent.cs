@@ -2,6 +2,7 @@ using Explain.Cli.AI.Tools;
 using Explain.Cli.Configuration;
 using Microsoft.Extensions.Options;
 using OpenAI.Responses;
+using System.ClientModel;
 
 namespace Explain.Cli.AI;
 
@@ -12,7 +13,6 @@ namespace Explain.Cli.AI;
 public class OpenAIServiceAgent : IOpenAIServiceAgent
 {
     private const int MaxLocalToolCalls = 4;
-    private readonly OpenAiOptions _openAiOptions;
     private readonly IResponsesApiClient _responsesClient;
     private bool _isVerbose;
 
@@ -24,8 +24,7 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
 
     public OpenAIServiceAgent(IOptions<OpenAiOptions> openAiOptions)
     {
-        _openAiOptions = openAiOptions.Value;
-        ValidateApiKey(_openAiOptions.ApiKey);
+        ValidateApiKey(openAiOptions.Value.ApiKey);
         _responsesClient = new ResponsesApiClient(openAiOptions);
     }
 
@@ -33,8 +32,7 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
         IOptions<OpenAiOptions> openAiOptions,
         IResponsesApiClient responsesClient)
     {
-        _openAiOptions = openAiOptions.Value;
-        ValidateApiKey(_openAiOptions.ApiKey);
+        ValidateApiKey(openAiOptions.Value.ApiKey);
         _responsesClient = responsesClient;
     }
 
@@ -49,13 +47,13 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
 
     public Task<AiResponse<string>> GetResponseAsync(
         IReadOnlyList<ResponseItem> messages,
-        bool thinkDeep,
+        OpenAiRequestSettings request,
         ILocalToolSession? localToolSession = null,
         CancellationToken cancellationToken = default)
     {
         return GetTypedResponseAsync<string>(
             messages,
-            thinkDeep,
+            request,
             null,
             null,
             localToolSession,
@@ -64,7 +62,7 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
 
     public async Task<AiResponse<T>> GetTypedResponseAsync<T>(
         IReadOnlyList<ResponseItem> messages,
-        bool thinkDeep,
+        OpenAiRequestSettings request,
         string? schemaName,
         BinaryData? jsonSchema,
         ILocalToolSession? localToolSession = null,
@@ -81,7 +79,8 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
 
             if (_isVerbose)
             {
-                Console.WriteLine($"Reasoning effort: {(thinkDeep ? "high" : "low")}");
+                Console.WriteLine($"Model: {request.ModelName}");
+                Console.WriteLine($"Reasoning effort: {request.ReasoningEffort?.ToString().ToLowerInvariant() ?? "none"}");
                 Console.WriteLine("Web search available: yes (model decides when to use it)");
                 Console.WriteLine($"Local memory tools available: {(localToolSession is null ? "no" : "yes")}");
                 if (!string.IsNullOrWhiteSpace(schemaName) && jsonSchema is not null)
@@ -91,9 +90,8 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
             while (true)
             {
                 var options = OpenAiResponseRequestFactory.Create(
-                    _openAiOptions,
                     inputItems,
-                    thinkDeep,
+                    request,
                     schemaName,
                     jsonSchema,
                     localToolSession?.Tools);
@@ -131,6 +129,20 @@ public class OpenAIServiceAgent : IOpenAIServiceAgent
                     inputItems.Add(new FunctionCallOutputResponseItem(functionCall.CallId, output));
                 }
             }
+        }
+        catch (ClientResultException exception)
+        {
+            var friendlyMessage = OpenAiRequestExceptionFormatter.GetFriendlyMessage(
+                exception.Status,
+                exception.Message,
+                request);
+            if (friendlyMessage is not null)
+                throw new InvalidOperationException(friendlyMessage, exception);
+
+            if (_isVerbose)
+                Console.WriteLine($"Error in GetResponse: {exception.Message}");
+
+            throw;
         }
         catch (Exception ex)
         {

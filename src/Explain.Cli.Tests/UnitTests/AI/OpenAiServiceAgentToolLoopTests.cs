@@ -11,6 +11,10 @@ namespace Explain.Cli.Tests.UnitTests.AI;
 [TestClass]
 public class OpenAiServiceAgentToolLoopTests
 {
+    private static readonly OpenAiRequestSettings Request = new(
+        "gpt-5.6-terra",
+        ResponseReasoningEffortLevel.Medium);
+
     [TestMethod]
     public async Task ToolLoop_ReturnsFunctionOutputAndAggregatesMetadata()
     {
@@ -34,7 +38,7 @@ public class OpenAiServiceAgentToolLoopTests
 
         var response = await agent.GetResponseAsync(
             [ResponseItem.CreateUserMessageItem("Question")],
-            false,
+            Request,
             toolSession);
 
         Assert.AreEqual(5, response.PromptTokens);
@@ -66,7 +70,7 @@ public class OpenAiServiceAgentToolLoopTests
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => agent.GetResponseAsync(
             [ResponseItem.CreateUserMessageItem("Question")],
-            false,
+            Request,
             new FakeToolSession()));
 
         StringAssert.Contains(exception.Message, "limit of 4");
@@ -95,8 +99,8 @@ public class OpenAiServiceAgentToolLoopTests
     private static OpenAiOptions Settings() => new()
     {
         ApiKey = "test-key",
-        ModelName = "gpt-5.6-terra",
-        SmartModelName = "gpt-5.6-terra"
+        DefaultModelName = "gpt-5.6-terra",
+        DefaultReasoningEffort = "medium"
     };
 
     private sealed class FakeResponsesApiClient : IResponsesApiClient

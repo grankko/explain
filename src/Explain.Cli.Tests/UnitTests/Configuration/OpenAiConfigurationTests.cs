@@ -14,19 +14,19 @@ public class OpenAiConfigurationTests
         var appSettings = new Dictionary<string, string?>
         {
             ["OpenAi:ApiKey"] = "json-key",
-            ["OpenAi:ModelName"] = "json-model",
-            ["OpenAi:SmartModelName"] = "json-smart"
+            ["OpenAi:DefaultModelName"] = "json-model",
+            ["OpenAi:DefaultReasoningEffort"] = "low"
         };
 
         Environment.SetEnvironmentVariable("EXPLAIN_OPENAI_KEY", "env-key");
-        Environment.SetEnvironmentVariable("EXPLAIN_OPENAI_MODEL_NAME", "env-model");
-        Environment.SetEnvironmentVariable("EXPLAIN_OPENAI_SMART_MODEL_NAME", "env-smart");
+        Environment.SetEnvironmentVariable("EXPLAIN_OPENAI_DEFAULT_MODEL_NAME", "env-model");
+        Environment.SetEnvironmentVariable("EXPLAIN_OPENAI_DEFAULT_REASONING_EFFORT", "high");
 
         var envOverrides = new Dictionary<string, string?>
         {
             ["OpenAi:ApiKey"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_KEY"),
-            ["OpenAi:ModelName"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_MODEL_NAME"),
-            ["OpenAi:SmartModelName"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_SMART_MODEL_NAME")
+            ["OpenAi:DefaultModelName"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_DEFAULT_MODEL_NAME"),
+            ["OpenAi:DefaultReasoningEffort"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_DEFAULT_REASONING_EFFORT")
         };
         var sanitizedEnvOverrides = envOverrides
             .Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
@@ -45,11 +45,11 @@ public class OpenAiConfigurationTests
         var options = provider.GetRequiredService<IOptions<OpenAiOptions>>().Value;
 
         Assert.AreEqual("env-key", options.ApiKey);
-        Assert.AreEqual("env-model", options.ModelName);
-        Assert.AreEqual("env-smart", options.SmartModelName);
+        Assert.AreEqual("env-model", options.DefaultModelName);
+        Assert.AreEqual("high", options.DefaultReasoningEffort);
 
         Environment.SetEnvironmentVariable("EXPLAIN_OPENAI_KEY", null);
-        Environment.SetEnvironmentVariable("EXPLAIN_OPENAI_MODEL_NAME", null);
-        Environment.SetEnvironmentVariable("EXPLAIN_OPENAI_SMART_MODEL_NAME", null);
+        Environment.SetEnvironmentVariable("EXPLAIN_OPENAI_DEFAULT_MODEL_NAME", null);
+        Environment.SetEnvironmentVariable("EXPLAIN_OPENAI_DEFAULT_REASONING_EFFORT", null);
     }
 }

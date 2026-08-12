@@ -15,7 +15,7 @@ A command-line tool that uses OpenAI's GPT models to explain anything you throw 
 - **Multiple Input Methods**: Support for direct questions and piped content
 - **Current Answers**: GPT-5.6 Terra can search the web when a question needs up-to-date or uncertain facts
 - **Visible Sources**: Web-derived answers include numbered citations and source URLs in the terminal
-- **Smart Mode**: High reasoning effort for complex topics; regular mode uses low reasoning effort
+- **Configurable Model and Reasoning**: Set clear defaults and override either per request
 - **Verbose Mode**: Detailed configuration and processing information
 - **Input Validation**: Automatic token counting and size limits
 - **Automatic Context**: Uses a short recent conversation window without requiring a flag
@@ -81,16 +81,16 @@ The application loads configuration in the following order (higher priority over
 1. **Command line arguments** (highest priority)
 2. **Environment variables**: 
    - `EXPLAIN_OPENAI_KEY`
-   - `EXPLAIN_OPENAI_MODEL_NAME` 
-   - `EXPLAIN_OPENAI_SMART_MODEL_NAME`
+   - `EXPLAIN_OPENAI_DEFAULT_MODEL_NAME`
+   - `EXPLAIN_OPENAI_DEFAULT_REASONING_EFFORT`
 3. **User configuration file**: `~/.config/explain/appsettings.json`
 4. **Application configuration file**: `src/Explain.Cli/appsettings.json` (lowest priority)
 
 The configuration directory and database are automatically created when the application first runs. The database contains local plaintext conversation history and durable memory; protect it like other user data.
 
-On the first non-ephemeral invocation, Explain records a privacy-balanced system profile containing the OS, kernel, architecture, shell name, and timezone. It never collects hostname, username, network details, environment values, or hardware identifiers. Refresh it with `--refresh-system` or ask Explain to refresh what it knows about the system.
+On the first non-ephemeral invocation, Explain records a privacy-balanced local system profile containing the OS, kernel, architecture, shell name, and timezone. It never collects hostname, username, network details, environment values, or hardware identifiers. `--refresh-system` re-collects and replaces only those reserved local facts; it does not make an AI request. It may be combined with a question, so the refreshed profile is available to that request.
 
-Both model settings default to `gpt-5.6-terra`. Existing installations can keep separate overrides for regular and `--think` requests, but `--think` always requests high reasoning effort while regular mode requests low reasoning effort.
+`OpenAi:DefaultModelName` defaults to `gpt-5.6-terra` and `OpenAi:DefaultReasoningEffort` defaults to `medium`. Override either for a single request with `--model` and `--reasoning`; use `--reasoning none` for models that do not support reasoning. If the API key cannot access a chosen model, Explain reports that directly without exposing raw API details.
 
 Web search is available automatically—there is no search flag. The model decides whether a lookup is useful, and successful searches add plain numbered markers to the answer plus a terminal-friendly `Sources:` section. Raw Markdown links are converted to readable text, while full source URLs remain visible and terminal-clickable. Web searches are billed as tool calls in addition to model token usage. A memory update requires a local function-tool round trip and may add model tokens, but no separate external service charge.
 
@@ -119,11 +119,15 @@ explain "Summarize our entire conversation" --include-history 0
 # Fully ephemeral: load and save neither history nor memory
 explain "One-off private question" --no-history
 ```
-### Smart Mode
-For complex topics requiring high reasoning effort:
+### Model and Reasoning Overrides
+For a different model or reasoning effort on one request:
 ```bash
-explain "Analyze the trade-offs between microservices and monolithic architecture" --think
+explain "Analyze the trade-offs between microservices and monolithic architecture" --reasoning high
+explain "Review this code" --model gpt-5.6-terra --reasoning medium
+explain "Summarize this" --model gpt-4.1 --reasoning none
 ```
+
+`--reasoning` accepts `none`, `minimal`, `low`, `medium`, `high`, or `xhigh`. Model support differs by model; choose `none` for a non-reasoning model.
 
 ### Piped Input
 Analyze files, command output, or any text content:
@@ -185,7 +189,8 @@ explain --refresh-system
 ### Command Line Options
 
 - `--verbose`: Display detailed configuration and processing information
-- `--think`: Use high reasoning effort with the configured smart model
+- `--model <name>`: Use an OpenAI model for this request instead of `OpenAi:DefaultModelName`
+- `--reasoning <effort>`: Use `none`, `minimal`, `low`, `medium`, `high`, or `xhigh` for this request instead of `OpenAi:DefaultReasoningEffort`
 - `--include-history [number]`: Override automatic recent history
   - Without number: Includes the last 3 entries from any age
   - With number: Includes specified number of entries
@@ -201,7 +206,7 @@ explain --refresh-system
   - Cannot be combined with other input or flags
 - `--show-memory`: Display reserved system facts and AI-created global/project memories
 - `--clear-memory`: Clear AI-created memories after confirmation while retaining system facts
-- `--refresh-system`: Refresh the reserved system profile; may be combined with a question
+- `--refresh-system`: Re-collect the reserved local system profile (OS, kernel, architecture, shell, and timezone); it does not make an AI request and may be combined with a question
 
 ### Building and Testing
 

@@ -40,12 +40,11 @@ namespace Explain.Cli.Commands.Explain
                 argsList.Remove("--verbose");
             }
 
-            // Check for think deep flag
-            if (argsList.Contains("--think"))
-            {
-                result.ThinkDeep = true;
-                argsList.Remove("--think");
-            }
+            ParseValueOption(argsList, "--model", value => result.ModelName = value, result);
+            ParseValueOption(argsList, "--reasoning", value => result.ReasoningEffort = value, result);
+
+            if (argsList.Remove("--think"))
+                result.ArgumentError = "--think has been replaced by --reasoning. For example: --reasoning high.";
 
             // Check for show history flag
             var showHistoryIndex = argsList.FindIndex(arg => arg == "--show-history");
@@ -116,6 +115,30 @@ namespace Explain.Cli.Commands.Explain
             }
 
             return result;
+        }
+
+        private static void ParseValueOption(
+            List<string> args,
+            string option,
+            Action<string> setValue,
+            ExplainArguments result)
+        {
+            var index = args.FindIndex(argument => argument == option);
+            if (index == -1)
+                return;
+
+            args.RemoveAt(index);
+            if (index >= args.Count || args[index].StartsWith("--", StringComparison.Ordinal))
+            {
+                result.ArgumentError ??= $"{option} requires a value.";
+                return;
+            }
+
+            setValue(args[index]);
+            args.RemoveAt(index);
+
+            if (args.Contains(option))
+                result.ArgumentError ??= $"{option} can only be specified once.";
         }
     }
 }

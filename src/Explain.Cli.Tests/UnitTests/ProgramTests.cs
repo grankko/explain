@@ -32,8 +32,8 @@ public class ProgramTests
         // Assert
         Assert.IsNotNull(openAiOptions, "OpenAiOptions should be configured");
         Assert.IsFalse(string.IsNullOrWhiteSpace(openAiOptions.ApiKey), "ApiKey should be configured");
-        Assert.IsFalse(string.IsNullOrWhiteSpace(openAiOptions.ModelName), "ModelName should be configured");
-        Assert.IsFalse(string.IsNullOrWhiteSpace(openAiOptions.SmartModelName), "SmartModelName should be configured");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(openAiOptions.DefaultModelName), "DefaultModelName should be configured");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(openAiOptions.DefaultReasoningEffort), "DefaultReasoningEffort should be configured");
     }
 
     [TestMethod]

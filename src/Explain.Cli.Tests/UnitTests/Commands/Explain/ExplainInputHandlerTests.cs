@@ -6,11 +6,11 @@ namespace Explain.Cli.Tests.UnitTests.Commands.Explain;
 public class ExplainInputHandlerTests
 {
     [TestMethod]
-    public async Task ProcessInputAsync_LargeInputRegularMode_ThrowsException()
+    public async Task ProcessInputAsync_LargeInput_ThrowsException()
     {
-        // Arrange - Create input that exceeds regular mode token limits (100K tokens)
+        // Arrange - Create input that exceeds the token limit (100K tokens)
         var largeQuestion = new string('x', 500_000); // ~125K tokens (4 chars per token)
-        var args = new ExplainArguments { Question = largeQuestion, ThinkDeep = false };
+        var args = new ExplainArguments { Question = largeQuestion };
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -20,11 +20,11 @@ public class ExplainInputHandlerTests
     }
 
     [TestMethod]
-    public async Task ProcessInputAsync_SmallInputSmartMode_ProcessesSuccessfully()
+    public async Task ProcessInputAsync_SmallInput_ProcessesSuccessfully()
     {
-        // Arrange - Create input that fits comfortably in smart mode (100K tokens max)
-        var smallQuestion = new string('x', 200_000); // ~50K tokens - well under both limits
-        var args = new ExplainArguments { Question = smallQuestion, ThinkDeep = true };
+        // Arrange - Create input that fits comfortably within the 100K-token limit.
+        var smallQuestion = new string('x', 200_000); // ~50K tokens
+        var args = new ExplainArguments { Question = smallQuestion };
         
         // Act
         var result = await ExplainInputHandler.ProcessInputAsync(args);
@@ -41,7 +41,7 @@ public class ExplainInputHandlerTests
     {
         // Arrange
         var question = "What is the meaning of life?";
-        var args = new ExplainArguments { Question = question, ThinkDeep = false };
+        var args = new ExplainArguments { Question = question };
         
         // Act
         var result = await ExplainInputHandler.ProcessInputAsync(args);

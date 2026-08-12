@@ -60,8 +60,8 @@ public class Program
         var envOverrides = new Dictionary<string, string?>
         {
             ["OpenAi:ApiKey"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_KEY"),
-            ["OpenAi:ModelName"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_MODEL_NAME"),
-            ["OpenAi:SmartModelName"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_SMART_MODEL_NAME")
+            ["OpenAi:DefaultModelName"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_DEFAULT_MODEL_NAME"),
+            ["OpenAi:DefaultReasoningEffort"] = Environment.GetEnvironmentVariable("EXPLAIN_OPENAI_DEFAULT_REASONING_EFFORT")
         };
 
         // Remove null values so they don't override existing configuration
